@@ -87,15 +87,16 @@ export default class PowerwallCard extends React.Component
 
   calculateSavings(
     storagePer,
+    rateMultiplier = 1,
     clip = ''
   ) {
     let ps = this.props.peakStart;
     let pe = this.props.peakEnd;
-    let pr = this.props.peakRate;
+    let pr = this.props.peakRate * rateMultiplier;
     let os = this.props.offStart;
     let oe = this.props.offEnd;
-    let or = this.props.offRate;
-    let sr = this.props.shoulderRate;
+    let or = this.props.offRate * rateMultiplier;
+    let sr = this.props.shoulderRate * rateMultiplier;
     let lastDate = '';
     let days = 1;
     let batteries = parseInt(this.state.batteries);

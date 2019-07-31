@@ -7,6 +7,7 @@ export default class RoiCard extends React.Component {
     gatewayCost: 1100,
     installation: 1000,
     decayCap: 0.7,
+    ratehike: 0.06,
   }
 
   render() {
@@ -15,11 +16,14 @@ export default class RoiCard extends React.Component {
     let gc = parseFloat(this.state.gatewayCost);
     let ic = parseFloat(this.state.installation);
     let dc = parseFloat(this.state.decayCap);
+    let rh = parseFloat(this.state.ratehike);
     let unpaid = bc * this.props.batteries + gc + ic;
+    let rate = 1;
     for (let index = 0; index < 10; index++) {
       let decay = 1 - ((1-dc) * .1 * index);
       let storage = this.props.storage * decay * this.props.batteries;
-      let calc = this.props.calc(storage/this.props.batteries);
+      let calc = this.props.calc(storage/this.props.batteries, rate, 365);
+      rate = rate * (1 + rh);
       unpaid -= calc.saved;
       breakdown.push({
         storage: storage,
@@ -40,6 +44,7 @@ export default class RoiCard extends React.Component {
             For this you should put in the cost per battery, installation costs, and the expected % capacity after 10 years.
             I've prefilled with the numbers for Powerwall 2 and the current Tesla 10 year warranty expectation.  The simulation
             table below shows year over year how much would be saved if your usage patterns and the rate of decay in efficacy.
+            Rate increase is the expected increase in electric utility price year over year, PGE has typically been 6% (0.06).
           </Card.Text>
           <InputGroup>
             <InputGroup.Prepend>
@@ -62,6 +67,10 @@ export default class RoiCard extends React.Component {
               10 year capacity
             </InputGroup.Text>
             <FormControl type="input" value={this.state.decayCap} onChange={ e => { this.setState({ decayCap: e.target.value })}}/>
+            <InputGroup.Text>         
+              Rate Increase
+            </InputGroup.Text>
+            <FormControl type="input" value={this.state.ratehike} onChange={ e => { this.setState({ ratehike: e.target.value })}}/>
           </InputGroup>
           <Table striped bordered hover>
             <thead>
