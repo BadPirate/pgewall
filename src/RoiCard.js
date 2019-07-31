@@ -36,6 +36,11 @@ export default class RoiCard extends React.Component {
           Return on Investment
         </Card.Header>
         <Card.Body>
+          <Card.Text>
+            For this you should put in the cost per battery, installation costs, and the expected % capacity after 10 years.
+            I've prefilled with the numbers for Powerwall 2 and the current Tesla 10 year warranty expectation.  The simulation
+            table below shows year over year how much would be saved if your usage patterns and the rate of decay in efficacy.
+          </Card.Text>
           <InputGroup>
             <InputGroup.Prepend>
               <InputGroup.Text>         

@@ -1,6 +1,8 @@
 # PGE-Wall
 ## Inspiration
+
 ![@stevewoz](https://i.imgur.com/2UsFfs7.png)
+
 Steve Woz (@stevewoz) made a fairly dubious claim on Twitter that he would be able to payback his two powerwalls in Los Gatos after just 3 years.  Los Gatos where Woz lives is under PG&E for electricity which happens to be the same company I pay for my electric use.  So, writing a tool to figure out the somewhat complex math of battery powered "arbitrage" was a win-win for me.  Either I would get to prove Woz wrong, or, I would be wrong and should run out and buy a stack of powerwall's myself for investment reasons alone.
 ## Use
 ### Requirements
