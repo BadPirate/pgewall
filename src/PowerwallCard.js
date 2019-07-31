@@ -59,6 +59,9 @@ export default class PowerwallCard extends React.Component
                   <th>
                     Savings
                   </th>
+                  <th>
+                    Bill ({calc.days} days)
+                  </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -68,6 +71,7 @@ export default class PowerwallCard extends React.Component
                     <td>{calc.sa.toFixed(1)} / {calc.su.toFixed(1)} kWH</td>
                     <td>{calc.mu.toFixed(1)} kWH</td>
                     <td>${calc.saved.toFixed(2)}</td>
+                    <td>${calc.spent.toFixed(2)}</td>
                   </tr>
                 </tbody>
             </Table>
@@ -110,6 +114,7 @@ export default class PowerwallCard extends React.Component
     let pa = 0;
     let mu = 0;
     let du = 0;
+    let ou = 0;
     this.props.usage.forEach((value, key) => {
       if (clip && days >= clip) {
         return;
@@ -124,8 +129,9 @@ export default class PowerwallCard extends React.Component
         }
         du = 0;
         if (charge !== storage) {
-          let drain = storage-charge;
-          oa += drain * (1 / efficiency);
+          let drain = (storage-charge) * (1 / efficiency);
+          oa += drain;
+          ou += drain;
           charge += drain;
         }
       }
@@ -144,7 +150,7 @@ export default class PowerwallCard extends React.Component
       } else if (   (os > pe && time >= os && time < 24)
                  || (time < oe) ) 
       {
-        // Off-peak
+        ou += value;
       } else {
         if (a > 0) 
         {
@@ -156,9 +162,10 @@ export default class PowerwallCard extends React.Component
       }
     });
     let saved = (pa * (pr - or)) + (sa * (sr - or));
-
+    let spent = ((pu-pa) * pr) + ((su-sa) * sr) + (ou * or);
     return {
       saved: saved,
+      spent: spent,
       days: days,
       oa: oa,
       sa: sa,

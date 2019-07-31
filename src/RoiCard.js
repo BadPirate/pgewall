@@ -27,6 +27,7 @@ export default class RoiCard extends React.Component {
       unpaid -= calc.saved;
       breakdown.push({
         storage: storage,
+        spent: calc.spent,
         year: index + 1,
         sa: calc.sa,
         pa: calc.pa,
@@ -88,6 +89,9 @@ export default class RoiCard extends React.Component {
                   Shoulder Arbitrage
                 </th>
                 <th>
+                  Bill
+                </th>
+                <th>
                   Saved
                 </th>
                 <th>
@@ -111,6 +115,9 @@ export default class RoiCard extends React.Component {
                     </td>
                     <td>
                       {y.sa.toFixed(1)} kWH
+                    </td>
+                    <td>
+                      ${y.spent.toFixed(2)}
                     </td>
                     <td>
                       ${y.saved.toFixed(2)}
