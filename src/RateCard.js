@@ -63,7 +63,7 @@ export default class RateCard extends React.Component
               Now you'll need to lookup the hours of your various rate periods and their rates, 
               and adjust these fields below as needed.  I've filled out 2019 rate for the EV-A plan.
               Note, that some Time of Use plans have different rates during winter and summer months,
-              currently I don't support this, because the arbitrage is less valuable in those cases
+              currently this is not supported, because the arbitrage is less valuable in those cases
               so likely it's a worse plan for this strategy in general.  This will return total usage and
               potential savings for the period you uploaded.
             </Card.Text>

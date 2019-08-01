@@ -23,9 +23,7 @@ export default class PowerwallCard extends React.Component
               Now provide information about the powerwall(s) you are considering.  I've prefilled with the numbers I have
               for the Powerwall 2.  For the date below, Arbitraged is the amount of electricity that would
               have been pulled off grid and stored during off peak, and then used in
-              place of grid during peak or shoulder time periods.  This value may be 
-              greater than total kWH if you have solar, as some hours may have negative
-              (solar is putting onto the grid) values.
+              place of grid during peak or shoulder time periods.
             </Card.Text>
             <InputGroup>
               <InputGroup.Prepend>

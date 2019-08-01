@@ -10,13 +10,9 @@ function App() {
         <Card.Header>Welcome</Card.Header>
         <Card.Body>
           <Card.Text>
-            This is a calculator for people who:
+            This is a calculator for people who are PGE Customers and are interested in purchasing a powerwall and seeing if using it to power
+            their home during "Peak" periods instead of the Grid can save them money in the long haul.
           </Card.Text>
-          <ul>
-              <li>Are PGE Customers</li>
-              <li>Have Solar, and are on NEM (Net Metering)</li>
-              <li>Are interested in buying a Tesla Powerall</li>
-          </ul>
           <p>For more details <a href="https://github.com/BadPirate/pgewall">Checkout the GitHub Repo</a>.</p>
           <Alert variant="info">
             <h5>

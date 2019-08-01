@@ -23,13 +23,17 @@ export default class UsageSheet extends React.Component {
               (but make sure to include the header row that labels colums).  Last I checked you can find this by:
               <ul>
                 <li>Logging into <a href="https://m.pge.com/#login">PGE Website</a></li>
-                <li>Choosing "Solar and Energy Details" button</li>
+                <li>Choosing "Energy Details" button</li>
                 <li>Clicking the "Green Button" to Download my data</li>
                 <li>Choosing "Export Usage for a Range"</li>
-                <li>Setting range to be a calendar year (most recent year)</li>
+                <li>Setting range (A full year is needed for ROI prediction, but less will still provide data)</li>
                 <li>Clicking Export</li>
               </ul>
             </Card.Text>
+            <Alert variant="info">
+              Note:  Currently calculating ROI for PGE users with Solar is not supported.  Importing solar production will 
+              be required, and support for this is coming (as it's my use case and this tool is first and foremost for me).
+            </Alert>
             <ReactFileReader handleFiles={f => this.handleFiles(f) } fileTypes={'.csv'}>
               <Button className='btn' variation='primary'>Upload</Button>
             </ReactFileReader>
