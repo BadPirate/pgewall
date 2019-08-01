@@ -1,12 +1,15 @@
 import React from 'react';
-import { Card, Button, Alert } from 'react-bootstrap';
+import { Card, Button, Alert, InputGroup } from 'react-bootstrap';
 import ReactFileReader from 'react-file-reader';
 import RateCard from './RateCard';
+import SolarCard from './SolarCard';
 
 export default class UsageSheet extends React.Component {
   state = {
     progress: 'No Data Loaded',
-    usage: ''
+    solar: false,
+    usage: '',
+    hasneg: false,
   }
   render() {
     return (
@@ -30,16 +33,22 @@ export default class UsageSheet extends React.Component {
                 <li>Clicking Export</li>
               </ul>
             </Card.Text>
-            <Alert variant="info">
-              Note:  Currently calculating ROI for PGE users with Solar is not supported.  Importing solar production will 
-              be required, and support for this is coming (as it's my use case and this tool is first and foremost for me).
-            </Alert>
             <ReactFileReader handleFiles={f => this.handleFiles(f) } fileTypes={'.csv'}>
               <Button className='btn' variation='primary'>Upload</Button>
             </ReactFileReader>
+            <hr/>
+            <InputGroup>
+              <InputGroup.Prepend>
+                <InputGroup.Checkbox checked={this.state.solar} onChange={ e => { this.setState({ solar: e.target.checked })}}/>
+              </InputGroup.Prepend>
+              <InputGroup.Text>
+                Net Energy Metering (Solar)
+              </InputGroup.Text>
+            </InputGroup>
           </Card.Body>
+          {(this.state.hasneg && !this.state.solar) ? <Alert variant="danger">Warning! Negative electric usage in CSV, you should check Solar box below or results will be wrong</Alert> : null }
         </Card>
-        { this.state.usage ? <RateCard usage={this.state.usage}/> : null }      
+        { this.state.usage ? (this.state.solar ? <SolarCard usage={this.state.usage} enphaseUserID={this.props.enphaseUserID}/> : <RateCard usage={this.state.usage} solar={null}/>) : null }      
       </div>
     );
   }
@@ -51,6 +60,7 @@ export default class UsageSheet extends React.Component {
     var reader = new FileReader();
     reader.onload = e => {
       let usage = new Map();
+      let hasneg = false;
       reader.result.split("\n").forEach(line => {
         if(line.startsWith('Electric usage')) {
           // 0             , 1        , 2   , 3   , 4  , 5 , 6
@@ -61,6 +71,9 @@ export default class UsageSheet extends React.Component {
           } else {
             let start = `${parts[1]},${parts[2]}`;
             let amount = parseFloat(parts[4]);
+            if(amount < 0) {
+              hasneg = true;
+            }
             let unit = parts[5];
             if (unit !== 'kWh') {
               console.log('Unknown unit - ',unit);
@@ -77,6 +90,8 @@ export default class UsageSheet extends React.Component {
       this.setState({
         usage: usage,
         progress: 'Loaded.',
+        hasneg: hasneg,
+        solar: hasneg
       });
     }
     reader.readAsText(files[0]);

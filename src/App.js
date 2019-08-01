@@ -19,8 +19,7 @@ function App() {
               Privacy
             </h5>
             <p>This site is Javascript (runs locally) so no data is sent to our servers or uploaded.  I don't want it.
-            But don't take my word for it,
-            <a href="https://github.com/BadPirate/pgewall">download and checkout the code yourself</a></p>.
+            But don't take my word for it, <a href="https://github.com/BadPirate/pgewall">download and checkout the code yourself</a>.</p>
           </Alert>
           <Alert variant="warning">
             <h5>
