@@ -39,7 +39,10 @@ export default class UsageSheet extends React.Component {
             <hr/>
             <InputGroup>
               <InputGroup.Prepend>
-                <InputGroup.Checkbox checked={this.state.solar} onChange={ e => { this.setState({ solar: e.target.checked })}}/>
+                <InputGroup.Checkbox checked={this.state.solar} onChange={ e => {
+                   this.setState({ solar: e.target.checked });
+                   localStorage.setItem('solar',e.target.checked ? true : false);
+                }}/>
               </InputGroup.Prepend>
               <InputGroup.Text>
                 Net Energy Metering (Solar)
@@ -51,6 +54,17 @@ export default class UsageSheet extends React.Component {
         { this.state.usage ? (this.state.solar ? <SolarCard usage={this.state.usage} enphaseUserID={this.props.enphaseUserID}/> : <RateCard usage={this.state.usage} solar={null}/>) : null }      
       </div>
     );
+  }
+
+  componentDidMount() {
+    if (!this.state.usage && localStorage.getItem('usage')) {
+      this.setState({
+        usage: new Map(JSON.parse(localStorage.getItem('usage'))),
+        solar: localStorage.getItem('solar') === 'true',
+        hasneg: localStorage.getItem('hasneg') === 'true',
+        progress: 'Restored.',
+      });
+    }
   }
 
   handleFiles(files) {
@@ -93,6 +107,9 @@ export default class UsageSheet extends React.Component {
         hasneg: hasneg,
         solar: hasneg
       });
+      localStorage.setItem('usage',JSON.stringify([...usage]));
+      localStorage.setItem('solar',hasneg);
+      localStorage.setItem('hasneg',hasneg);
     }
     reader.readAsText(files[0]);
   }
