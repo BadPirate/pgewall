@@ -62,7 +62,7 @@ export default class UsageSheet extends React.Component {
         usage: new Map(JSON.parse(localStorage.getItem('usage'))),
         solar: localStorage.getItem('solar') === 'true',
         hasneg: localStorage.getItem('hasneg') === 'true',
-        progress: 'Restored.',
+        progress: 'Restored previous usage CSV.',
       });
     }
   }

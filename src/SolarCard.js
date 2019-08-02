@@ -8,6 +8,7 @@ export default class SolarCard extends React.Component
   state = {
     production: "",
     status: "No data retrieved",
+    enphaseUserID: '',
   }
 
   render() {
@@ -27,7 +28,7 @@ export default class SolarCard extends React.Component
             </Card.Text>
             {
                 enphaseAppID
-                ? <EnphaseComponent enphaseAppID={enphaseAppID}/>
+                ? <EnphaseComponent enphaseAppID={enphaseAppID} enphaseUserID={this.state.enphaseUserID} logout={_ => { this.logoutEnphase(); }}/>
                 : <Alert variant="danger">
                     Must set <code>REACT_APP_ENPHASE_APP_ID</code> environmental variable to Enphase Developer App ID in order to enable Enphase integration
                   </Alert>
@@ -38,23 +39,49 @@ export default class SolarCard extends React.Component
       </div>
     );
   }
+
+  componentDidMount() {
+    let parseID = qs.parse(window.location.search).user_id;
+    if (!this.state.enphaseUserID) {
+      if(parseID) {
+        localStorage.setItem('enphaseUserID',parseID);
+        window.location = window.location.protocol + '//' + window.location.host + window.location.pathname;
+      }
+      let storedID = localStorage.getItem('enphaseUserID');
+      if (storedID) {
+        this.setState({
+          enphaseUserID: storedID,
+          status: "Authenticated Enphase Enlighten.",
+        });
+      }
+    }
+  }
+
+  logoutEnphase() {
+    localStorage.setItem('enphaseUserID','');
+    this.setState({
+      enphaseUserID: '',
+      status: 'Logged out Enphase'
+    });
+  }
 }
 
 class EnphaseComponent extends React.Component 
 {
   render() {
     let enphaseAppID = process.env.REACT_APP_ENPHASE_APP_ID;
-    let userID = qs.parse(window.location.search).user_id;
     return (
       <div>
       {
-        userID
+        this.props.enphaseUserID
         ? <div>
-            <Button>Logout Enphase Enlighten</Button>
+            <Button onClick={this.props.logout}>
+              Logout Enphase Enlighten
+            </Button>
           </div>
         : <Button href={`https://enlighten.enphaseenergy.com/app_user_auth/new?app_id=${enphaseAppID}&redirect=${window.location.href}`}>Retrieve using Enphase Enlighten</Button>
       }
       </div>
     );
-  } 
+  }
 }
