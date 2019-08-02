@@ -1,14 +1,18 @@
 const express = require('express');
 const path = require('path');
-
+var cors = require('cors');
 const app = express();
+
+// Cors
+app.use(cors());
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'build')));
 
 // Put all API endpoints under '/api'
-app.get('/api/enphase', (req, res) => {
-
+app.get('/api/enphase/*', (req, res) => {
+  console.log("Enphase API request");
+  res.status(200).json(['success?']);
 });
 
 // The "catchall" handler: for any request that doesn't

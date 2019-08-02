@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "query-string": "^6.8.2",
     "react": "^16.8.6",
@@ -16,6 +17,7 @@
     "start": "node server.js",
     "stop": "(kill -9 $(lsof -ti :5000) 2> /dev/null); (kill -9 $(lsof -ti :3000) 2> /dev/null); echo 'Stopped'",
     "local": "npm run build && (node server.js & open http://localhost:5000)",
+    "restart": "(kill -9 $(lsof -ti :5000) 2> /dev/null); node server.js &",
     "dev": "node server.js & react-scripts start &",
     "build": "react-scripts build",
     "test": "react-scripts test",

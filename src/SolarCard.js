@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
 import RateCard from './RateCard';
 import qs from 'query-string';
+import { EnphaseAPI } from './Api';
 
 export default class SolarCard extends React.Component 
 {
@@ -14,11 +15,12 @@ export default class SolarCard extends React.Component
 
   render() {
     let enphaseAppID = process.env.REACT_APP_ENPHASE_APP_ID;
-    
-    if (this.state.enphaseUserID) 
+    let enphaseUserID = this.state.enphaseUserID;
+    if (enphaseUserID) 
     {
+      let api = new EnphaseAPI(enphaseUserID);
       if (!this.state.enphaseSystems) {
-         // TODO: Load Systems from API
+        api.getSystems().then(res => { alert(res); }) 
       }
     }
     return (
