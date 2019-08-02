@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
 import RateCard from './RateCard';
-import { BrowserRouter as Router, Route } from "react-router-dom";
 
 export default class SolarCard extends React.Component 
 {
@@ -25,9 +24,7 @@ export default class SolarCard extends React.Component
             </Card.Text>
             {
                 enphaseAppID
-                ? <Router>
-                    <Route component={EnphaseComponent}/>
-                  </Router>
+                ? <EnphaseComponent enphaseAppID={enphaseAppID}/>
                 : <Alert variant="danger">
                     Must set <code>REACT_APP_ENPHASE_APP_ID</code> environmental variable to Enphase Developer App ID in order to enable Enphase integration
                   </Alert>
