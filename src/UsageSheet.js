@@ -24,6 +24,7 @@ export default class UsageSheet extends React.Component {
               Connect to PGE website and download a CSV of your solar output.  Feel free to clear the headers that 
               include account information and address, so that just the dates, hours, and KW used are present 
               (but make sure to include the header row that labels colums).  Last I checked you can find this by:
+            </Card.Text>
               <ul>
                 <li>Logging into <a href="https://m.pge.com/#login">PGE Website</a></li>
                 <li>Choosing "Energy Details" button</li>
@@ -32,7 +33,6 @@ export default class UsageSheet extends React.Component {
                 <li>Setting range (A full year is needed for ROI prediction, but less will still provide data)</li>
                 <li>Clicking Export</li>
               </ul>
-            </Card.Text>
             <ReactFileReader handleFiles={f => this.handleFiles(f) } fileTypes={'.csv'}>
               <Button className='btn' variation='primary'>Upload</Button>
             </ReactFileReader>
