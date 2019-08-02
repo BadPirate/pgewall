@@ -1,11 +1,13 @@
 import React from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
 import RateCard from './RateCard';
+import qs from 'query-string';
 
 export default class SolarCard extends React.Component 
 {
   state = {
     production: "",
+    status: "No data retrieved",
   }
 
   render() {
@@ -16,6 +18,7 @@ export default class SolarCard extends React.Component
           <Card.Header>
             Solar
           </Card.Header>
+          <Alert variant="info">{this.state.status}</Alert>
           <Card.Body>
             <Card.Text>
               When Solar is installed Powerwall can only charge from Solar (not grid).  In order to simulate we need to know about Solar Generation,
@@ -41,12 +44,15 @@ class EnphaseComponent extends React.Component
 {
   render() {
     let enphaseAppID = process.env.REACT_APP_ENPHASE_APP_ID;
+    let userID = qs.parse(window.location.search).user_id;
     return (
       <div>
       {
-        this.props.enphaseUserID
-        ? <Card.Text>Set</Card.Text>
-        : <Button href={`https://enlighten.enphaseenergy.com/app_user_auth/new?app_id=${enphaseAppID}&redirect=${window.location.href}`}>Get User ID</Button>
+        userID
+        ? <div>
+            <Button>Logout Enphase Enlighten</Button>
+          </div>
+        : <Button href={`https://enlighten.enphaseenergy.com/app_user_auth/new?app_id=${enphaseAppID}&redirect=${window.location.href}`}>Retrieve using Enphase Enlighten</Button>
       }
       </div>
     );

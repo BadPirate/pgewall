@@ -18,8 +18,8 @@ export default class UsageSheet extends React.Component {
           <Card.Header>
             Load PGE CSV Electric Usage Data
           </Card.Header>
+          { this.state.progress ? <Alert variant="info">{this.state.progress}</Alert> : null }
           <Card.Body>
-            { this.state.progress ? <Alert variant="info">{this.state.progress}</Alert> : null }
             <Card.Text>
               Connect to PGE website and download a CSV of your solar output.  Feel free to clear the headers that 
               include account information and address, so that just the dates, hours, and KW used are present 
