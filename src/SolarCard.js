@@ -9,10 +9,18 @@ export default class SolarCard extends React.Component
     production: "",
     status: "No data retrieved",
     enphaseUserID: '',
+    enphaseSystems: ''
   }
 
   render() {
     let enphaseAppID = process.env.REACT_APP_ENPHASE_APP_ID;
+    
+    if (this.state.enphaseUserID) 
+    {
+      if (!this.state.enphaseSystems) {
+         // TODO: Load Systems from API
+      }
+    }
     return (
       <div>
         <Card>
@@ -27,12 +35,12 @@ export default class SolarCard extends React.Component
               case <a href="https://github.com/BadPirate/pgewall/issues/new">file an issue</a>.
             </Card.Text>
             {
-                enphaseAppID
-                ? <EnphaseComponent enphaseAppID={enphaseAppID} enphaseUserID={this.state.enphaseUserID} logout={_ => { this.logoutEnphase(); }}/>
-                : <Alert variant="danger">
-                    Must set <code>REACT_APP_ENPHASE_APP_ID</code> environmental variable to Enphase Developer App ID in order to enable Enphase integration
-                  </Alert>
-              }
+              enphaseAppID
+              ? <EnphaseComponent enphaseAppID={enphaseAppID} enphaseUserID={this.state.enphaseUserID} logout={_ => { this.logoutEnphase(); }}/>
+              : <Alert variant="danger">
+                  Must set <code>REACT_APP_ENPHASE_APP_ID</code> environmental variable to Enphase Developer App ID in order to enable Enphase integration
+                </Alert>
+            }
           </Card.Body>
         </Card>
         { this.state.production ? <RateCard usage={this.props.usage} solar={this.state.production}/> : null }
