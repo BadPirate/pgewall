@@ -24,6 +24,6 @@ export class EnphaseAPI
 
   api(cmd) {
     if (!this.userID) throw new Error("User ID not set before making Enphase API call");
-    return API('enphase/'+cmd);
+    return API(`enphase/${cmd}?user_id=${this.userID}`);
   }
 }

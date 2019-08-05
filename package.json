@@ -1,24 +1,31 @@
 {
   "name": "pge-wall",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "dependencies": {
+    "babel-preset-env": "^1.7.0",
     "bootstrap": "^4.3.1",
     "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "enlighten-api": "^1.2.0",
+    "esm": "^3.2.25",
     "express": "^4.17.1",
+    "jquery": "^1.12.4",
+    "path": "^0.12.7",
     "query-string": "^6.8.2",
     "react": "^16.8.6",
-    "react-bootstrap": "^1.0.0-beta.9",
+    "react-bootstrap": "^1.0.0-beta.10",
     "react-dom": "^16.8.6",
     "react-file-reader": "^1.1.4",
-    "react-scripts": "3.0.1"
+    "react-scripts": "3.0.1",
+    "typescript": "^3.5.3"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node -r esm server.js",
     "stop": "(kill -9 $(lsof -ti :5000) 2> /dev/null); (kill -9 $(lsof -ti :3000) 2> /dev/null); echo 'Stopped'",
     "local": "npm run build && (node server.js & open http://localhost:5000)",
-    "restart": "(kill -9 $(lsof -ti :5000) 2> /dev/null); node server.js &",
-    "dev": "node server.js & react-scripts start &",
+    "restart": "(kill -9 $(lsof -ti :5000) 2> /dev/null); node -r esm server.js &",
+    "dev": "node -r esm server.js & react-scripts start &",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -37,6 +44,10 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ]
+    ],
+    "devDependencies": {
+      "@babel/core": "^7.5.5",
+      "@babel/preset-env": "^7.5.5"
+    }
   }
 }
