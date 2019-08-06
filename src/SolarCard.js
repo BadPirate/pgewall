@@ -3,7 +3,10 @@ import { Card, Button, Alert, DropdownButton, Dropdown, InputGroup } from 'react
 import RateCard from './RateCard';
 import qs from 'query-string';
 import { EnphaseAPI } from './Api';
+import ReactFileReader from 'react-file-reader';
+const moment = require('moment');
 const { Map } = require('immutable');
+const dateFormat = require('dateformat');
 
 export default class SolarCard extends React.Component 
 {
@@ -67,11 +70,71 @@ export default class SolarCard extends React.Component
                   Must set <code>REACT_APP_ENPHASE_APP_ID</code> environmental variable to Enphase Developer App ID in order to enable Enphase integration
                 </Alert>
             }
+            <hr/>
+            <Card.Text>
+              You can also upload your production data in a CSV with two colums:
+            </Card.Text>
+            <ul>
+              <li>Date of the start of production period (any Javascript parseable format)</li>
+              <li>Power production during that period in Watts</li>
+            </ul>
+            <Card.Text>Periods must be less than 1 hour to match with PGE Data.</Card.Text>
+            <ReactFileReader handleFiles={f => this.upload(f) } fileTypes={'.csv'}>
+              <Button className='btn' variation='primary'>Upload Production CSV</Button>
+            </ReactFileReader>
           </Card.Body>
         </Card>
         { this.state.production ? <RateCard usage={this.props.usage} production={this.state.production}/> : null }
       </div>
     );
+  }
+
+  upload(files) {
+    this.setState({
+      production: '',
+      status: 'Loading CSV...',
+      enphaseUserID: '',
+      enphaseSystems: '',
+      selected: '',
+      error: '',
+    });
+    var reader = new FileReader();
+    reader.onload = _ => {
+      let production = new Map();
+      let dates = new Set();
+      let rows = 0;
+      reader.result.split("\n").forEach(line => {
+        let parts = line.split(',');
+        let m = moment(parts[0]);
+        if (!m.isValid()) {
+          throw new Error(`Invalid date format - ${parts[0]}`);
+        }
+        let date = m.toDate();
+        let watts = parseInt(parts[1])/1000;
+        let key = `${dateFormat(date,'yyyy-mm-dd,HH:00')}`;
+        dates.add(dateFormat(date,'yyyy-mm-dd'));
+        console.log(key,watts);
+        if (production.has(key)) {
+          production = production.set(key,production.get(key)+watts);
+        } else {
+          production = production.set(key,watts);
+        }
+        rows++;
+      });
+      if (production.size === 0) {
+        this.setState({
+          error: "No valid rows in CSV"
+        });
+      } else {
+        localStorage.setItem("production",JSON.stringify([...production]));
+        this.setState({
+          status: `Loaded ${rows} rows (${dates.size} days) from CSV`,
+          error: '',
+          production: production,
+        });
+      }
+    }
+    reader.readAsText(files[0]);
   }
 
   componentDidMount() {
@@ -167,7 +230,7 @@ class EnphaseComponent extends React.Component
           api.getProduction(system.system_id,start,end)
           .then(power => {
             console.log('Power result',key,'=',power);
-            this.props.setProduction(key,parseInt(power));
+            this.props.setProduction(key,parseInt(power)/1000);
           }, error => {
             console.log('Power Error',key,error);
             this.props.setProduction(key,0)

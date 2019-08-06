@@ -62,11 +62,15 @@ export default class UsageSheet extends React.Component {
 
   componentDidMount() {
     if (!this.state.usage && localStorage.getItem('usage')) {
+      let usage = JSON.parse(localStorage.getItem('usage'));
+      let dates = new Set(usage.map((value) => {
+        return value[0].substring(0,10);
+      }));
       this.setState({
-        usage: new Map(JSON.parse(localStorage.getItem('usage'))),
+        usage: new Map(usage),
         solar: localStorage.getItem('solar') === 'true',
         hasneg: localStorage.getItem('hasneg') === 'true',
-        progress: 'Restored previous usage CSV.',
+        progress: `Restored previous usage CSV. (${dates.size} days)`,
       });
     }
   }

@@ -151,7 +151,7 @@ export default class RateCard extends React.Component
                       <tr key={key}>
                         <td>{key}</td>
                         <td>{value.toFixed(2)} kWH</td>
-                        { tp ? <td>{(tp.get(key)/1000).toFixed(1)}kWH</td> : null }
+                        { tp ? <td>{(tp.get(key)).toFixed(1)} kWH</td> : null }
                         <td>${cost}</td>
                       </tr>
                     );
@@ -160,7 +160,7 @@ export default class RateCard extends React.Component
                 <tr>
                   <td>Total</td>
                   <td>{total.toFixed(2)} kWH</td>
-                  { tp ? <td>{(ttp/1000).toFixed(1)} kWH</td> : null }
+                  { tp ? <td>{(ttp).toFixed(1)} kWH</td> : null }
                   <td>${totalCost.toFixed(2)}</td>
                 </tr>
               </tbody>

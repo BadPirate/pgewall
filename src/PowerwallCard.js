@@ -101,8 +101,6 @@ export default class PowerwallCard extends React.Component
     let or = this.props.offRate * rateMultiplier;
     let sr = this.props.shoulderRate * rateMultiplier;
     let production = this.props.production;
-    let lastDate = '';
-    let days = 1;
     let batteries = parseInt(this.state.batteries);
     let storage = batteries*parseFloat(storagePer);
     let efficiency = parseFloat(this.state.efficiency);
@@ -115,17 +113,17 @@ export default class PowerwallCard extends React.Component
     let mu = 0;
     let du = 0;
     let ou = 0;
+    let days = new Set();
     this.props.usage.forEach((value, key) => {
       if (production && !production.has(key)) return;
       let p = (production && production.get(key)) ? production.get(key) : 0;
-      if (clip && days >= clip) {
-        return;
-      }
       let parts = key.split(',');
       let date = parts[0];
-      if (lastDate !== date) {
-        days++;
-        lastDate = date;
+      if (!days.has(date)) {
+        if (clip && days.size >= clip) {
+          return;
+        }
+        days.add(date);
         if (du > mu) {
           mu = du;
         }
@@ -160,6 +158,7 @@ export default class PowerwallCard extends React.Component
           let store = Math.min(p,storage-charge);
           ou += store; // Use from grid instead
           charge += store * efficiency; // Store into battery
+          oa += p;
         }
         ou += value;
       } else {
@@ -175,6 +174,7 @@ export default class PowerwallCard extends React.Component
           let store = Math.min(p,storage-charge);
           su += store; // Use from grid instead
           charge += store * efficiency; // Store into battery
+          oa += p;
         }
         su += value;
         du += value;
@@ -185,7 +185,7 @@ export default class PowerwallCard extends React.Component
     return {
       saved: saved,
       spent: spent,
-      days: days,
+      days: days.size,
       oa: oa,
       sa: sa,
       su: su,
