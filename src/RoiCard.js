@@ -11,6 +11,7 @@ export default class RoiCard extends React.Component {
   }
 
   render() {
+    return <div/>;
     let breakdown = [];
     let bc = parseFloat(this.state.batteryCost);
     let gc = parseFloat(this.state.gatewayCost);

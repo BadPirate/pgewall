@@ -38,12 +38,24 @@ export default class RateCard extends React.Component
     let pr = parseFloat(this.state.peakRate);
     let or = parseFloat(this.state.offRate);
     let sr = parseFloat(this.state.shoulderRate);
-    let total = parseFloat(0);
-    let totalCost = parseFloat(0);
-    let ttp = 0;
+    let production = this.props.production;
+    let totalCost = 0;
+    let totalGrid = 0;
+    let totalSolar = 0;
+    let firstDate = '';
+    let lastDate = '';
     this.props.usage.forEach((value, key) => {
       if(this.props.production && !this.props.production.has(key)) return;
       let p = (this.props.production && this.props.production.has(key)) ? this.props.production.get(key) : 0;
+      totalSolar += p;
+      totalGrid += value;
+      let date = key.split(',')[0];
+      if (!firstDate || date < firstDate) {
+        firstDate = date;
+      }
+      if (!lastDate || date > lastDate) {
+        lastDate = date;
+      }
       let parts = key.split(',')[1].split(':');
       let time = parseInt(parts[0]);
       if (time >= ps && time < pe) {
@@ -61,8 +73,6 @@ export default class RateCard extends React.Component
         if (tp) tp.set('shoulder',tp.get('shoulder') + p);
         totalCost += value * sr;
       }
-      ttp += p;
-      total += value;
     });
     return (
       <div>
@@ -131,15 +141,17 @@ export default class RateCard extends React.Component
             <Table striped bordered hover>
               <thead>
                 <tr>
-                  <th>Period</th>
-                  <th>{tp ? 'Net ' : ''}Usage</th>
-                  { tp ? <th>Total Production</th> : null }
-                  <th>Total Cost</th>
+                  <th>Period {firstDate} to {lastDate}</th>
+                  { production ? <th>Solar Production</th> : null }
+                  <th>Grid Use</th>
+                  { production ? <th>Total Use</th> : null }
+                  <th>Cost</th>
                 </tr>
               </thead>
               <tbody>
                 {
                   Array.from(periods, ([key, value]) => {
+                    let p = production ? tp.get(key) : 0;
                     var r = sr;
                     if (key === 'peak') {
                       r = pr;
@@ -150,8 +162,9 @@ export default class RateCard extends React.Component
                     return (
                       <tr key={key}>
                         <td>{key}</td>
+                        { production ? <td>{p.toFixed(2)} kWH</td> : null }
                         <td>{value.toFixed(2)} kWH</td>
-                        { tp ? <td>{(tp.get(key)).toFixed(1)} kWH</td> : null }
+                        { production ? <td>{(value+p).toFixed(2)} kWH</td> : null }
                         <td>${cost}</td>
                       </tr>
                     );
@@ -159,8 +172,9 @@ export default class RateCard extends React.Component
                 }
                 <tr>
                   <td>Total</td>
-                  <td>{total.toFixed(2)} kWH</td>
-                  { tp ? <td>{(ttp).toFixed(1)} kWH</td> : null }
+                  { production ? <td>{totalSolar.toFixed(2)} kWH</td> : null}
+                  <td>{totalGrid.toFixed(2)} kWH</td>
+                  { production ? <td>{(totalSolar+totalGrid).toFixed(1)} kWH</td> : null }
                   <td>${totalCost.toFixed(2)}</td>
                 </tr>
               </tbody>

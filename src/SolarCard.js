@@ -76,7 +76,7 @@ export default class SolarCard extends React.Component
             </Card.Text>
             <ul>
               <li>Date of the start of production period (any Javascript parseable format)</li>
-              <li>Power production during that period in Watts</li>
+              <li>Watt Hour Sample for that production period, will be averaged with other samples from the same hour</li>
             </ul>
             <Card.Text>Periods must be less than 1 hour to match with PGE Data.</Card.Text>
             <ReactFileReader handleFiles={f => this.upload(f) } fileTypes={'.csv'}>
@@ -103,23 +103,39 @@ export default class SolarCard extends React.Component
       let production = new Map();
       let dates = new Set();
       let rows = 0;
+      let errors = 0;
       reader.result.split("\n").forEach(line => {
         let parts = line.split(',');
         let m = moment(parts[0]);
         if (!m.isValid()) {
-          throw new Error(`Invalid date format - ${parts[0]}`);
+          let sub = parts[0].substr(0,16);
+          m = moment(sub);
+          if (!m.isValid()) {
+            console.log(`Invalid date format - ${parts[0]} or ${sub}`);
+            errors++;
+            return;
+          }
         }
         let date = m.toDate();
         let kw = parseInt(parts[1])/1000;
         let key = `${dateFormat(date,'yyyy-mm-dd,HH:00')}`;
         dates.add(dateFormat(date,'yyyy-mm-dd'));
         if (production.has(key)) {
-          production = production.set(key,production.get(key)+kw);
+          let samples = production.get(key);
+          samples.push(kw);
+          production = production.set(key,samples);
         } else {
-          production = production.set(key,kw);
+          production = production.set(key,[kw]);
         }
         rows++;
       });
+      let collapsed = new Map();
+      production.forEach((values, key) => {
+        let sum = 0;
+        values.forEach(v => {sum+=v});
+        collapsed = collapsed.set(key,sum/values.length);
+      })
+      production = collapsed;
       if (production.size === 0) {
         this.setState({
           error: "No valid rows in CSV"
@@ -127,7 +143,7 @@ export default class SolarCard extends React.Component
       } else {
         localStorage.setItem("production",JSON.stringify([...production]));
         this.setState({
-          status: `Loaded ${rows} rows (${dates.size} days) from CSV`,
+          status: `Loaded ${rows} rows from ${dates.size} days (${errors} errors) from CSV`,
           error: '',
           production: production,
         });
@@ -155,7 +171,8 @@ export default class SolarCard extends React.Component
       let cached = localStorage.getItem('production');
       if (cached) {
         this.setState({
-          production: new Map(JSON.parse(cached))
+          production: new Map(JSON.parse(cached)),
+          status: "Retrieved cached production data."
         });
       }
     }
