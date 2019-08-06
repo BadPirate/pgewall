@@ -11,7 +11,7 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "immutable": "^4.0.0-rc.12",
-    "jquery": "^1.12.4",
+    "jquery": "^3.4.1",
     "path": "^0.12.7",
     "query-string": "^6.8.2",
     "react": "^16.8.6",
