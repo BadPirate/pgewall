@@ -76,6 +76,7 @@ function reportError(res) {
  */
 function enlightenAPI(userID) {
   if (!lastApi || lastApi.userID !== userID) {
+    console.log('New API - ',userID);
     lastApi = new EnlightenAPI(userID);
   }
   return lastApi;
