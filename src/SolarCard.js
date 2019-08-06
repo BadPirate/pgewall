@@ -69,7 +69,7 @@ export default class SolarCard extends React.Component
             }
           </Card.Body>
         </Card>
-        { this.state.production ? <RateCard usage={this.props.usage} solar={this.state.production}/> : null }
+        { this.state.production ? <RateCard usage={this.props.usage} production={this.state.production}/> : null }
       </div>
     );
   }

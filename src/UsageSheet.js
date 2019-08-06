@@ -51,7 +51,11 @@ export default class UsageSheet extends React.Component {
           </Card.Body>
           {(this.state.hasneg && !this.state.solar) ? <Alert variant="danger">Warning! Negative electric usage in CSV, you should check Solar box below or results will be wrong</Alert> : null }
         </Card>
-        { this.state.usage ? (this.state.solar ? <SolarCard usage={this.state.usage} enphaseUserID={this.props.enphaseUserID}/> : <RateCard usage={this.state.usage} solar={null}/>) : null }      
+        { this.state.usage 
+          ? (this.state.solar 
+             ? <SolarCard usage={this.state.usage} enphaseUserID={this.props.enphaseUserID}/> 
+             : <RateCard usage={this.state.usage}/>) 
+          : null }      
       </div>
     );
   }

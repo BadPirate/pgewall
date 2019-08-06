@@ -24,8 +24,13 @@ export default class RateCard extends React.Component
     let periods = new Map(
       [[ 'peak', 0 ],
       [ 'offpeak', 0 ],
-      [ 'shoulder', 0]]
+      [ 'shoulder', 0 ]]
     );
+    let tp = this.props.production ? new Map(
+      [[ 'peak', 0 ],
+      [ 'offpeak', 0 ],
+      [ 'shoulder', 0 ]]
+    ) : null;
     let ps = parseInt(this.state.peakStart.split(':')[0]);
     let pe = parseInt(this.state.peakEnd.split(':')[0]);
     let os = parseInt(this.state.offStart.split(':')[0]);
@@ -35,21 +40,28 @@ export default class RateCard extends React.Component
     let sr = parseFloat(this.state.shoulderRate);
     let total = parseFloat(0);
     let totalCost = parseFloat(0);
+    let ttp = 0;
     this.props.usage.forEach((value, key) => {
+      if(this.props.production && !this.props.production.has(key)) return;
+      let p = (this.props.production && this.props.production.has(key)) ? this.props.production.get(key) : 0;
       let parts = key.split(',')[1].split(':');
       let time = parseInt(parts[0]);
       if (time >= ps && time < pe) {
         periods.set('peak',periods.get('peak') + value);
+        if (tp) tp.set('peak',tp.get('peak') + p);
         totalCost += value * pr;
       } else if (   (os > pe && time >= os && time < 24)
                  || (time < oe) ) 
       {
         periods.set('offpeak',periods.get('offpeak') + value);
+        if (tp) tp.set('offpeak',tp.get('offpeak') + p);
         totalCost += value * or;
       } else {
         periods.set('shoulder',periods.get('shoulder') + value);
+        if (tp) tp.set('shoulder',tp.get('shoulder') + p);
         totalCost += value * sr;
       }
+      ttp += p;
       total += value;
     });
     return (
@@ -120,7 +132,8 @@ export default class RateCard extends React.Component
               <thead>
                 <tr>
                   <th>Period</th>
-                  <th>Total Usage</th>
+                  <th>{tp ? 'Net ' : ''}Usage</th>
+                  { tp ? <th>Total Production</th> : null }
                   <th>Total Cost</th>
                 </tr>
               </thead>
@@ -138,6 +151,7 @@ export default class RateCard extends React.Component
                       <tr key={key}>
                         <td>{key}</td>
                         <td>{value.toFixed(2)} kWH</td>
+                        { tp ? <td>{(tp.get(key)/1000).toFixed(1)}kWH</td> : null }
                         <td>${cost}</td>
                       </tr>
                     );
@@ -146,6 +160,7 @@ export default class RateCard extends React.Component
                 <tr>
                   <td>Total</td>
                   <td>{total.toFixed(2)} kWH</td>
+                  { tp ? <td>{(ttp/1000).toFixed(1)} kWH</td> : null }
                   <td>${totalCost.toFixed(2)}</td>
                 </tr>
               </tbody>
@@ -153,7 +168,7 @@ export default class RateCard extends React.Component
           </Card.Body>
         </Card>
         <PowerwallCard usage={this.props.usage} peakStart={ps} peakEnd={pe} peakRate={pr}
-                       offStart={os} offEnd={oe} offRate={or} shoulderRate={sr} />
+                       offStart={os} offEnd={oe} offRate={or} shoulderRate={sr} production={this.props.production}/>
       </div>
     );
   }

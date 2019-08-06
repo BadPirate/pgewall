@@ -12,6 +12,7 @@ export default class PowerwallCard extends React.Component
 
   render() {
     let calc = this.calculateSavings(this.state.storagePer);
+    let production = this.props.production;
     return (
       <div>
         <Card>
@@ -45,7 +46,7 @@ export default class PowerwallCard extends React.Component
               <thead>
                 <tr>
                   <th>
-                    Off-peak charging
+                    {production ? 'Solar' : 'Off-peak'} charging
                   </th>
                   <th>
                     Arbitraged to peak
@@ -99,6 +100,7 @@ export default class PowerwallCard extends React.Component
     let oe = this.props.offEnd;
     let or = this.props.offRate * rateMultiplier;
     let sr = this.props.shoulderRate * rateMultiplier;
+    let production = this.props.production;
     let lastDate = '';
     let days = 1;
     let batteries = parseInt(this.state.batteries);
@@ -114,6 +116,8 @@ export default class PowerwallCard extends React.Component
     let du = 0;
     let ou = 0;
     this.props.usage.forEach((value, key) => {
+      if (production && !production.has(key)) return;
+      let p = (production && production.get(key)) ? production.get(key) : 0;
       if (clip && days >= clip) {
         return;
       }
@@ -126,7 +130,7 @@ export default class PowerwallCard extends React.Component
           mu = du;
         }
         du = 0;
-        if (charge !== storage) {
+        if (!production && charge !== storage) {
           let drain = (storage-charge) * (1 / efficiency);
           oa += drain;
           ou += drain;
@@ -138,6 +142,7 @@ export default class PowerwallCard extends React.Component
       let a = charge > value ? value : charge;
       if (value < 0) a = 0;
       if (time >= ps && time < pe) {
+        // Peak
         if (a > 0) 
         {
           pa += a;
@@ -148,12 +153,28 @@ export default class PowerwallCard extends React.Component
       } else if (   (os > pe && time >= os && time < 24)
                  || (time < oe) ) 
       {
+        // Off-Peak
+        if (p)
+        {
+          // Solar setup, we drain from grid for house when able, and charge battery
+          let store = Math.min(p,storage-charge);
+          ou += store; // Use from grid instead
+          charge += store * efficiency; // Store into battery
+        }
         ou += value;
       } else {
-        if (a > 0) 
+        // Shoulder
+        if (!production && a > 0)
         {
           sa += a;
           charge -= a;
+        }
+        if (p)
+        {
+          // Solar setup, we drain from grid for house when able, and charge battery
+          let store = Math.min(p,storage-charge);
+          su += store; // Use from grid instead
+          charge += store * efficiency; // Store into battery
         }
         su += value;
         du += value;

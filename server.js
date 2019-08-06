@@ -27,7 +27,7 @@ app.get('/api/enlighten/:user_id/systems', (req, res) => {
 
 // Put all API endpoints under '/api'
 app.get('/api/enlighten/:user_id/:system/production/:start/:end', (req, res) => {
-  console.log("Enlighten Usage request - ",req.params);
+  console.log("Enlighten Usage request - ",req.params.start,req.params.end);
   let userID = req.params.user_id;
   let system = parseInt(req.params.system);
   let api = enlightenAPI(userID);
