@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, FormControl, InputGroup, Table } from 'react-bootstrap';
+import { Card, FormControl, InputGroup, Table, Alert } from 'react-bootstrap';
 
 export default class RoiCard extends React.Component {
   state = {
@@ -19,29 +19,40 @@ export default class RoiCard extends React.Component {
     let rh = parseFloat(this.state.ratehike);
     let unpaid = bc * this.props.batteries + gc + ic;
     let rate = 1;
+    let days = 0;
     for (let index = 0; index < 10; index++) {
       let decay = ((1-dc)/10)*index;
-      let results = this.props.results(decay,rate).results;
+      let {results, calc} = this.props.results(decay,rate);
+      days = calc.days;
+      let mod = 365/days;
       rate *= 1+rh;
       let total = results[results.length - 1];
-      unpaid -= total.savings;
+      unpaid -= total.savings * mod;
       breakdown.push({
         year: index + 1,
         storage: this.props.storage/(1+decay),
-        charged: total.charged,
-        discharged: total.discharged,
-        grid: total.grid,
-        cost: total.cost,
-        savings: total.savings,
+        charged: total.charged * mod,
+        discharged: total.discharged * mod,
+        grid: total.grid * mod,
+        cost: total.cost * mod,
+        savings: total.savings * mod,
         unpaid: unpaid,
       });
     }
     return (
-      <Card>
+      <Card>                      
         <Card.Header>
           Return on Investment
         </Card.Header>
         <Card.Body>
+          {
+            days !== 365
+            ? <Alert variant="danger">
+                Upload 1 year of data to make an ROI estimate ({days} uploaded) - because of this, data will be simulated (poorly) as if the period
+                you did provide was representative of solar production / usage for the calendar year (not really representative, so huge grains of salt)
+              </Alert>
+            : null
+          }
           <Card.Text>
             For this you should put in the cost per battery, installation costs, and the expected % capacity after 10 years.
             I've prefilled with the numbers for Powerwall 2 and the current Tesla 10 year warranty expectation.  The simulation

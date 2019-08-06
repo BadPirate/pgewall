@@ -72,14 +72,7 @@ export default class PowerwallCard extends React.Component
             </Table>
           </Card.Body>
         </Card>
-        { 
-          calc.days >= 365 
-          ? <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} 
-             storage={this.state.storagePer} /> 
-          : <Alert variant="info">
-            Upload 1 year of data to make an ROI estimate ({calc.days} uploaded)
-          </Alert>
-        }
+        <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} storage={this.state.storagePer} /> 
       </div>
     );
   }
