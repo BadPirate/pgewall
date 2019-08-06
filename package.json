@@ -29,12 +29,17 @@
     "dev": "node -r esm server.js & react-scripts start &",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "react": "react-scripts start"
   },
   "eslintConfig": {
     "extends": "react-app"
   },
   "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5"
+  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -45,10 +50,6 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
-    ],
-    "devDependencies": {
-      "@babel/core": "^7.5.5",
-      "@babel/preset-env": "^7.5.5"
-    }
+    ]
   }
 }
