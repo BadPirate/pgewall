@@ -11,7 +11,6 @@ export default class RoiCard extends React.Component {
   }
 
   render() {
-    return <div/>;
     let breakdown = [];
     let bc = parseFloat(this.state.batteryCost);
     let gc = parseFloat(this.state.gatewayCost);
@@ -21,19 +20,20 @@ export default class RoiCard extends React.Component {
     let unpaid = bc * this.props.batteries + gc + ic;
     let rate = 1;
     for (let index = 0; index < 10; index++) {
-      let decay = 1 - ((1-dc) * .1 * index);
-      let storage = this.props.storage * decay * this.props.batteries;
-      let calc = this.props.calc(storage/this.props.batteries, rate, 365);
-      rate = rate * (1 + rh);
-      unpaid -= calc.saved;
+      let decay = ((1-dc)/10)*index;
+      let results = this.props.results(decay,rate).results;
+      rate *= 1+rh;
+      let total = results[results.length - 1];
+      unpaid -= total.savings;
       breakdown.push({
-        storage: storage,
-        spent: calc.spent,
         year: index + 1,
-        sa: calc.sa,
-        pa: calc.pa,
-        saved: calc.saved,
-        net: -unpaid,
+        storage: this.props.storage/(1+decay),
+        charged: total.charged,
+        discharged: total.discharged,
+        grid: total.grid,
+        cost: total.cost,
+        savings: total.savings,
+        unpaid: unpaid,
       });
     }
     return (
@@ -84,19 +84,22 @@ export default class RoiCard extends React.Component {
                   Storage
                 </th>
                 <th>
-                  Peak Arbitrage
+                  Battery Charge
                 </th>
                 <th>
-                  Shoulder Arbitrage
+                  Battery Discharge
+                </th>
+                <th>
+                  Grid Use
                 </th>
                 <th>
                   Bill
                 </th>
                 <th>
-                  Saved
+                  Savings
                 </th>
                 <th>
-                  Total Net
+                  Lifetime Net
                 </th>
               </tr>
             </thead>
@@ -109,23 +112,24 @@ export default class RoiCard extends React.Component {
                       {y.year}
                     </td>
                     <td>
-                      {y.storage.toFixed(1)} kWH
+                      {y.storage.toFixed(0)} kWH
                     </td>
                     <td>
-                      {y.pa.toFixed(1)} kWH
+                      {y.charged.toFixed(0)} kWH
                     </td>
                     <td>
-                      {y.sa.toFixed(1)} kWH
+                      {y.discharged.toFixed(0)} kWH
                     </td>
                     <td>
-                      ${y.spent.toFixed(2)}
+                      ${y.grid.toFixed(0)} kWH
                     </td>
                     <td>
-                      ${y.saved.toFixed(2)}
+                      ${y.cost.toFixed(2)}
                     </td>
                     <td>
-                      ${y.net.toFixed(2)}
+                      ${y.savings.toFixed(2)}
                     </td>
+                    <td>${y.unpaid.toFixed(2)}</td>
                   </tr>
                 );
               })

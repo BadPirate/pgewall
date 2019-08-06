@@ -11,56 +11,7 @@ export default class PowerwallCard extends React.Component
   }
 
   render() {
-    let calc = this.calculateSavings(this.state.storagePer);
-    let pr = this.props.peakRate;
-    let or = this.props.offRate;
-    let sr = this.props.shoulderRate;
-    let results = [
-      {
-        period: "Peak",
-        charged: calc.pb < 0 ? -calc.pb : 0,
-        discharged: calc.pb > 0 ? calc.pb : 0,
-        grid: calc.pg,
-        cost: calc.pg * pr,
-        savings: calc.pb * pr,
-      },
-      {
-        period: "Off Peak",
-        charged: calc.ob < 0 ? -calc.ob : 0,
-        discharged: calc.ob > 0 ? calc.ob : 0,
-        grid: calc.og,
-        cost: calc.og * or,
-        savings: calc.ob * or,
-      },
-      {
-        period: "Shoulder",
-        charged: calc.sb < 0 ? -calc.sb : 0,
-        discharged: calc.sb > 0 ? calc.sb : 0,
-        grid: calc.sg,
-        cost: calc.sg * sr,
-        savings: calc.sb * sr,
-      }
-    ];
-    let tca = 0;
-    let td = 0;
-    let tg = 0;
-    let tco = 0;
-    let ts = 0;
-    results.forEach(row => {
-      tca += row.charged;
-      td += row.discharged;
-      tg += row.grid;
-      tco += row.cost;
-      ts += row.savings;
-    });
-    results.push({
-      period: "Total",
-      charged: tca,
-      discharged: td,
-      grid: tg,
-      cost: tco,
-      savings: ts,
-    });
+    let { calc, results } = this.results();
     return (
       <div>
         <Card>
@@ -123,7 +74,7 @@ export default class PowerwallCard extends React.Component
         </Card>
         { 
           calc.days >= 365 
-          ? <RoiCard calc={this.calculateSavings.bind(this)}  batteries={this.state.batteries} 
+          ? <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} 
              storage={this.state.storagePer} /> 
           : <Alert variant="info">
             Upload 1 year of data to make an ROI estimate ({calc.days} uploaded)
@@ -133,9 +84,66 @@ export default class PowerwallCard extends React.Component
     );
   }
 
+  results(
+    batteryDecay = 0,
+    rate = 1,
+  ) 
+  {
+    let calc = this.calculateSavings(this.state.storagePer*(1-batteryDecay));
+    let pr = this.props.peakRate;
+    let or = this.props.offRate;
+    let sr = this.props.shoulderRate;
+    let results = [
+      {
+        period: "Peak",
+        charged: calc.pb < 0 ? -calc.pb : 0,
+        discharged: calc.pb > 0 ? calc.pb : 0,
+        grid: calc.pg,
+        cost: calc.pg * pr * rate,
+        savings: calc.pb * pr * rate,
+      },
+      {
+        period: "Off Peak",
+        charged: calc.ob < 0 ? -calc.ob : 0,
+        discharged: calc.ob > 0 ? calc.ob : 0,
+        grid: calc.og,
+        cost: calc.og * or * rate,
+        savings: calc.ob * or * rate,
+      },
+      {
+        period: "Shoulder",
+        charged: calc.sb < 0 ? -calc.sb : 0,
+        discharged: calc.sb > 0 ? calc.sb : 0,
+        grid: calc.sg,
+        cost: calc.sg * sr * rate,
+        savings: calc.sb * sr * rate,
+      }
+    ];
+    let tca = 0;
+    let td = 0;
+    let tg = 0;
+    let tco = 0;
+    let ts = 0;
+    results.forEach(row => {
+      tca += row.charged;
+      td += row.discharged;
+      tg += row.grid;
+      tco += row.cost;
+      ts += row.savings;
+    });
+    results.push({
+      period: "Total",
+      charged: tca,
+      discharged: td,
+      grid: tg,
+      cost: tco,
+      savings: ts,
+    });
+    return { calc, results };
+  }
+
   calculateSavings(
-    storagePer,
-    clip = ''
+    storagePer
   ) {
     let ps = this.props.peakStart;
     let pe = this.props.peakEnd;
@@ -170,7 +178,7 @@ export default class PowerwallCard extends React.Component
 
       if (!days.has(date)) {
         // It's a new day
-        if (clip && days.size >= clip) {
+        if (days.size >= 365) {
           return;
         }
         days.add(date);
