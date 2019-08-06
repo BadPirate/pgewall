@@ -110,14 +110,13 @@ export default class SolarCard extends React.Component
           throw new Error(`Invalid date format - ${parts[0]}`);
         }
         let date = m.toDate();
-        let watts = parseInt(parts[1])/1000;
+        let kw = parseInt(parts[1])/1000;
         let key = `${dateFormat(date,'yyyy-mm-dd,HH:00')}`;
         dates.add(dateFormat(date,'yyyy-mm-dd'));
-        console.log(key,watts);
         if (production.has(key)) {
-          production = production.set(key,production.get(key)+watts);
+          production = production.set(key,production.get(key)+kw);
         } else {
-          production = production.set(key,watts);
+          production = production.set(key,kw);
         }
         rows++;
       });

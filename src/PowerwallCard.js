@@ -46,15 +46,14 @@ export default class PowerwallCard extends React.Component
               <thead>
                 <tr>
                   <th>
-                    {production ? 'Solar' : 'Off-peak'} charging
+                    {production ? 'Offpeak (Battery / Grid / Total)' : 'Off-peak charging'}
                   </th>
                   <th>
-                    Arbitraged to peak
+                    {production ? 'Peak (Battery / Grid / Total)' : 'Arbitraged to peak'}
                   </th>
                   <th>
-                    Arbitraged to shoulder
+                    {production ? 'Shoulder (Battery / Grid / Total)' : 'Arbitraged to shoulder'}
                   </th>
-                  <th>Max used</th>
                   <th>
                     Savings
                   </th>
@@ -65,10 +64,9 @@ export default class PowerwallCard extends React.Component
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{calc.oa.toFixed(1)} kWH</td>
-                    <td>{calc.pa.toFixed(1)} / {calc.pu.toFixed(1)} kWH</td>
-                    <td>{calc.sa.toFixed(1)} / {calc.su.toFixed(1)} kWH</td>
-                    <td>{calc.mu.toFixed(1)} kWH</td>
+                    <td>{`${calc.ob.toFixed(1)} / ${calc.og.toFixed(1)} / ${calc.ou.toFixed(1)}`} kWH</td>
+                    <td>{`${calc.pb.toFixed(1)} / ${calc.pg.toFixed(1)} / ${calc.pu.toFixed(1)}`} kWH</td>
+                    <td>{`${calc.sb.toFixed(1)} / ${calc.sg.toFixed(1)} / ${calc.su.toFixed(1)}`} kWH</td>
                     <td>${calc.saved.toFixed(2)}</td>
                     <td>${calc.spent.toFixed(2)}</td>
                   </tr>
@@ -105,93 +103,94 @@ export default class PowerwallCard extends React.Component
     let storage = batteries*parseFloat(storagePer);
     let efficiency = parseFloat(this.state.efficiency);
     let charge = 0;
-    let oa = 0;
+
+    // u = use, b = battery, g = grid
     let su = 0;
-    let sa = 0;
+    let sb = 0;
+    let sg = 0;
+
     let pu = 0;
-    let pa = 0;
-    let mu = 0;
-    let du = 0;
+    let pb = 0;
+    let pg = 0;
+
     let ou = 0;
+    let ob = 0;
+    let og = 0;
+
     let days = new Set();
     this.props.usage.forEach((value, key) => {
       if (production && !production.has(key)) return;
       let p = (production && production.get(key)) ? production.get(key) : 0;
       let parts = key.split(',');
       let date = parts[0];
+
       if (!days.has(date)) {
+        // It's a new day
         if (clip && days.size >= clip) {
           return;
         }
         days.add(date);
-        if (du > mu) {
-          mu = du;
-        }
-        du = 0;
+
+        // If we aren't solar, we can charge during off-peak
         if (!production && charge !== storage) {
-          let drain = (storage-charge) * (1 / efficiency);
-          oa += drain;
-          ou += drain;
-          charge += drain;
+          let canStore = (storage-charge) * (1 / efficiency);
+          og += canStore;
+          ob -= (storage-charge);
+          ou += canStore;
         }
       }
+      
       parts = parts[1].split(':');
       let time = parseInt(parts[0]);
-      let a = charge > value ? value : charge;
-      if (value < 0) a = 0;
+      let use = value + p;
+      let available = use > 0 ? Math.min(use,charge) : 0;
+
       if (time >= ps && time < pe) {
         // Peak
-        if (a > 0) 
-        {
-          pa += a;
-          charge -= a;
-        }
-        pu += value;
-        du += value;
+        charge -= available;
+        pb += available;
+        pg += use-available;
+        pu += use;
       } else if (   (os > pe && time >= os && time < 24)
                  || (time < oe) ) 
       {
         // Off-Peak
-        if (p)
-        {
-          // Solar setup, we drain from grid for house when able, and charge battery
-          let store = Math.min(p,storage-charge);
-          ou += store; // Use from grid instead
-          charge += store * efficiency; // Store into battery
-          oa += p;
-        }
-        ou += value;
+        let canStore = (storage-charge) * (1 / efficiency);
+        let store = Math.min(canStore,p);
+        ob += store * efficiency;
+        og += use-(p-store);
+        ou += p;
       } else {
         // Shoulder
-        if (!production && a > 0)
-        {
-          sa += a;
-          charge -= a;
+        if (production) {
+          let canStore = (storage-charge) * (1 / efficiency);
+          let store = Math.min(canStore,p);
+          sb += store * efficiency;
+          sg += use-(p-store);
+          su += p;
+        } else {
+          charge -= available;
+          sb += available;
+          sg += use-available;
+          su += use;
         }
-        if (p)
-        {
-          // Solar setup, we drain from grid for house when able, and charge battery
-          let store = Math.min(p,storage-charge);
-          su += store; // Use from grid instead
-          charge += store * efficiency; // Store into battery
-          oa += p;
-        }
-        su += value;
-        du += value;
       }
     });
-    let saved = (pa * (pr - or)) + (sa * (sr - or));
-    let spent = ((pu-pa) * pr) + ((su-sa) * sr) + (ou * or);
+    let saved = (pb * (pr - or)) + (sb * (sr - or));
+    let spent = ((pg) * pr) + ((sg) * sr) + (og * or);
     return {
       saved: saved,
       spent: spent,
       days: days.size,
-      oa: oa,
-      sa: sa,
-      su: su,
-      pa: pa,
+      og: og,
+      ob: ob,
+      ou: ou,
+      pg: pg,
+      pb: pb,
       pu: pu,
-      mu: mu
+      sg: sg,
+      sb: sb,
+      su: su,
     };
   }
 }
