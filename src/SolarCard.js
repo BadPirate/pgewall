@@ -4,6 +4,7 @@ import RateCard from './RateCard';
 import qs from 'query-string';
 import { EnphaseAPI } from './Api';
 import ReactFileReader from 'react-file-reader';
+import { logEvent } from './utils';
 const moment = require('moment');
 const { Map } = require('immutable');
 const dateFormat = require('dateformat');
@@ -148,6 +149,7 @@ export default class SolarCard extends React.Component
           production: production,
         });
       }
+      logEvent('upload-production-csv');
     }
     reader.readAsText(files[0]);
   }
@@ -165,6 +167,7 @@ export default class SolarCard extends React.Component
           enphaseUserID: storedID,
           status: "Authenticated Enphase Enlighten.",
         });
+        logEvent('authenticated-enphase');
       }
     }
     if (!this.state.production) {
@@ -209,6 +212,7 @@ export default class SolarCard extends React.Component
       error: '',
       production: '',
     });
+    logEvent('logout-enphase');
   }
 }
 

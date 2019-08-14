@@ -3,6 +3,7 @@ import { Card, Button, Alert, InputGroup } from 'react-bootstrap';
 import ReactFileReader from 'react-file-reader';
 import RateCard from './RateCard';
 import SolarCard from './SolarCard';
+import { logEvent } from './utils';
 
 export default class UsageSheet extends React.Component {
   state = {
@@ -115,6 +116,7 @@ export default class UsageSheet extends React.Component {
         hasneg: hasneg,
         solar: hasneg
       });
+      logEvent('loaded-csv');
       localStorage.setItem('usage',JSON.stringify([...usage]));
       localStorage.setItem('solar',hasneg);
       localStorage.setItem('hasneg',hasneg);

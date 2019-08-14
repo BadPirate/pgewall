@@ -2,6 +2,12 @@ import React from 'react';
 import './App.css';
 import { Card, Alert } from 'react-bootstrap';
 import UsageSheet from './UsageSheet';
+import { install } from 'ga-gtag';
+
+let tracking = process.env.GOOGLE_TRACKING_ID;
+if (tracking) {
+  install(tracking);
+}
 
 function App() {
   return (

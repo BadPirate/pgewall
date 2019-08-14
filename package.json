@@ -11,6 +11,7 @@
     "enlighten-api": "^1.2.2",
     "esm": "^3.2.25",
     "express": "^4.17.1",
+    "ga-gtag": "^1.0.1",
     "immutable": "^4.0.0-rc.12",
     "jquery": "^3.4.1",
     "moment": "^2.24.0",
