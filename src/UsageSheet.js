@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, Button, Alert, InputGroup } from 'react-bootstrap';
 import ReactFileReader from 'react-file-reader';
-import RateCard from './RateCard';
 import SolarCard from './SolarCard';
 import { logEvent } from './utils';
+import { SimulationCard } from './SimulationCard';
 
 export default class UsageSheet extends React.Component {
   state = {
@@ -55,7 +55,7 @@ export default class UsageSheet extends React.Component {
         { this.state.usage 
           ? (this.state.solar 
              ? <SolarCard usage={this.state.usage} enphaseUserID={this.props.enphaseUserID}/> 
-             : <RateCard usage={this.state.usage}/>) 
+             : <SimulationCard usage={this.state.usage}/>) 
           : null }      
       </div>
     );

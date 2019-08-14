@@ -1,4 +1,5 @@
 import EnlightenAPI from "enlighten-api";
+import "isomorphic-fetch";
 const path = require('path');
 var dotEnvPath = path.resolve('./.env');
 require('dotenv').config({ path: dotEnvPath});
@@ -40,6 +41,40 @@ app.get('/api/enlighten/:user_id/:system/production/:start/:end', (req, res) => 
   })
   .then(total => {
     res.status(200).json(total);
+  })
+  .catch(reportError(res));
+});
+
+app.get('/api/nrel/pvwatts/hourly/:capacity/:type/:losses/:tilt/:address', (req, res) => {
+  let apiKey = process.env.NREL_API_KEY;
+  if (!apiKey) {
+    throw new Error('Must set API Key for NREL to use this - NREL_API_KEY env');
+  }
+  console.log("nrel/pvwatts/hourly request",req.params);
+  let url = new URL("https://developer.nrel.gov/api/pvwatts/v6.json");
+  let params = {
+    api_key: process.env.NREL_API_KEY,
+    format: 'json',
+    system_capacity: parseFloat(req.params.capacity),
+    array_type: parseInt(req.params.type),
+    tilt: parseFloat(req.params.tilt),
+    module_type: 0,
+    azimuth: 180,
+    address: req.params.address,
+    timeframe: 'hourly',
+    losses: parseFloat(req.params.losses),
+  }
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+  fetch(url.toString())
+  .then(response => {
+    return response.json();
+  })
+  .then(obj => {
+    console.log(obj);
+    return obj.outputs.ac;
+  })
+  .then(result => {
+    res.status(200).json(result);
   })
   .catch(reportError(res));
 });

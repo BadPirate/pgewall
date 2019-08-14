@@ -123,7 +123,7 @@ export default class RoiCard extends React.Component {
                       {y.year}
                     </td>
                     <td>
-                      {y.storage.toFixed(0)} kWH
+                      {y.storage.toFixed(1)} kWH
                     </td>
                     <td>
                       {y.charged.toFixed(0)} kWH

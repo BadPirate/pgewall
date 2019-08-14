@@ -5,6 +5,7 @@ import qs from 'query-string';
 import { EnphaseAPI } from './Api';
 import ReactFileReader from 'react-file-reader';
 import { logEvent } from './utils';
+import { SimulationCard } from './SimulationCard';
 const moment = require('moment');
 const { Map } = require('immutable');
 const dateFormat = require('dateformat');
@@ -85,7 +86,7 @@ export default class SolarCard extends React.Component
             </ReactFileReader>
           </Card.Body>
         </Card>
-        { this.state.production ? <RateCard usage={this.props.usage} production={this.state.production}/> : null }
+        { this.state.production ? <SimulationCard usage={this.props.usage} production={this.state.production}/> : null }
       </div>
     );
   }
