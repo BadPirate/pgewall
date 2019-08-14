@@ -1,4 +1,4 @@
-const serverBase = window.location.protocol+'//'+ window.location.hostname+':5000';
+const serverBase = (process.env.NODE_ENV === "development") ? window.location.protocol+'//'+ window.location.hostname+':5000' : '';
 
 function API(cmd) {
   let call = `${serverBase}/api/${cmd}`;

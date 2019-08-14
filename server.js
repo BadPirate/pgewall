@@ -47,7 +47,7 @@ app.get('/api/enlighten/:user_id/:system/production/:start/:end', (req, res) => 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req, res) => {
-  console.log('Non-API Request - ',req);
+  console.log('Non-API Request - ',req.url);
   res.sendFile(path.join(__dirname+'/build/index.html'));
 });
 
