@@ -2,6 +2,7 @@
   "name": "pge-wall",
   "version": "1.2.2",
   "private": true,
+  "main": "server.js",
   "dependencies": {
     "babel-preset-env": "^1.7.0",
     "bootstrap": "^4.3.1",
