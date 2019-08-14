@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, InputGroup, FormControl, Table, Alert } from 'react-bootstrap';
+import { Card, InputGroup, FormControl, Table } from 'react-bootstrap';
 import RoiCard from './RoiCard';
 
 export default class PowerwallCard extends React.Component

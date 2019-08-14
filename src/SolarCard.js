@@ -149,7 +149,7 @@ export default class SolarCard extends React.Component
           production: production,
         });
       }
-      logEvent('upload-production-csv');
+      logEvent('SolarCard','loaded-csv');
     }
     reader.readAsText(files[0]);
   }
@@ -167,7 +167,7 @@ export default class SolarCard extends React.Component
           enphaseUserID: storedID,
           status: "Authenticated Enphase Enlighten.",
         });
-        logEvent('authenticated-enphase');
+        logEvent('EnphaseCard','authenticated');
       }
     }
     if (!this.state.production) {
@@ -212,7 +212,7 @@ export default class SolarCard extends React.Component
       error: '',
       production: '',
     });
-    logEvent('logout-enphase');
+    logEvent('EnphaseCard','logout');
   }
 }
 

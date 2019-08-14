@@ -116,7 +116,7 @@ export default class UsageSheet extends React.Component {
         hasneg: hasneg,
         solar: hasneg
       });
-      logEvent('loaded-csv');
+      logEvent('UsageSheet','loaded-csv');
       localStorage.setItem('usage',JSON.stringify([...usage]));
       localStorage.setItem('solar',hasneg);
       localStorage.setItem('hasneg',hasneg);
