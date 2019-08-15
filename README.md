@@ -55,6 +55,10 @@ Because there is a giant source of free energy in the sky, solar panels tend to 
 
 ![Solar Config](https://i.imgur.com/yeHz89V.png)
 
+### Solar Simulation
+
+Often the question of "Should I get a powerwall" is never so straight forward, in cases where you don't have solar already, or have room for more solar, it is useful to consider how that new production would play with your existing configuration. To facilitate this, I've added an option to simulate solar (using the NREL PVWatts API) production based on adding another system, as well as including it's price in calculated ROI.  Note, this power is treated somewhat differently from actual production as it doesn't increase what your net usage was (for the PG&E portion) like production does.
+
 ## The Wizard of Woz
 
 Most of my calculations do not seem to indicate it's easy to get a 3 year payback for a Powerwall, but if you were to have a really odd scenario then it might be possible.  The following conditions optimize payback:
