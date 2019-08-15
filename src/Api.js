@@ -45,7 +45,9 @@ export class PVWattsAPI
    */
   hourlySimulation(capacity,type,losses,tilt,address)
   {
-    return this.api(`hourly/${capacity}/${type}/${losses}/${tilt}/${encodeURIComponent(address)}`);
+    return this.api(`hourly/${capacity}/${type}/${losses}/${tilt}/${encodeURIComponent(address)}`).then(result => {
+      return result.map(wh => { return wh/1000; })
+    });
   }
 
   api(cmd) {

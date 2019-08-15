@@ -20,13 +20,33 @@ export default class RateCard extends React.Component
     this.setState(map);
   }
 
+  dayOfYear(date)
+  {
+    var start = new Date(date.getFullYear(), 0, 0);
+    var diff = (date - start) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
+    var oneDay = 1000 * 60 * 60 * 24;
+    var day = Math.floor(diff / oneDay);
+    return day;
+  }
+
   render() {
+    let simulated = this.props.simulated;
     let periods = new Map(
       [[ 'peak', 0 ],
       [ 'offpeak', 0 ],
       [ 'shoulder', 0 ]]
     );
+    let simPeriods = simulated ? new Map(
+      [[ 'peak', 0 ],
+      [ 'offpeak', 0 ],
+      [ 'shoulder', 0 ]]
+    ) : null;
     let tp = this.props.production ? new Map(
+      [[ 'peak', 0 ],
+      [ 'offpeak', 0 ],
+      [ 'shoulder', 0 ]]
+    ) : null;
+    let ts = simulated ? new Map(
       [[ 'peak', 0 ],
       [ 'offpeak', 0 ],
       [ 'shoulder', 0 ]]
@@ -40,8 +60,11 @@ export default class RateCard extends React.Component
     let sr = parseFloat(this.state.shoulderRate);
     let production = this.props.production;
     let totalCost = 0;
+    let totalSimCost = 0;
     let totalGrid = 0;
     let totalSolar = 0;
+    let totalSimulated = 0;
+    let totalSimGrid = 0;
     let firstDate = '';
     let lastDate = '';
     this.props.usage.forEach((value, key) => {
@@ -58,20 +81,36 @@ export default class RateCard extends React.Component
       }
       let parts = key.split(',')[1].split(':');
       let time = parseInt(parts[0]);
+      let s = 0;
+      if(simulated) {
+        let doy = this.dayOfYear(new Date(date));
+        s = simulated.get(`${doy}-${parseInt(time)}`);
+        totalSimulated += s;
+        totalSimGrid += value - s;
+      }
       if (time >= ps && time < pe) {
         periods.set('peak',periods.get('peak') + value);
+        if (ts) simPeriods.set('peak',simPeriods.get('peak') + (value - s));
         if (tp) tp.set('peak',tp.get('peak') + p);
+        if (ts) ts.set('peak',ts.get('peak') + s);
         totalCost += value * pr;
+        totalSimCost += (value - s) * pr;
       } else if (   (os > pe && time >= os && time < 24)
                  || (time < oe) ) 
       {
         periods.set('offpeak',periods.get('offpeak') + value);
+        if (ts) simPeriods.set('offpeak',simPeriods.get('offpeak') + (value - s));
         if (tp) tp.set('offpeak',tp.get('offpeak') + p);
+        if (ts) ts.set('offpeak',ts.get('offpeak') + s);
         totalCost += value * or;
+        totalSimCost += (value - s) * or;
       } else {
         periods.set('shoulder',periods.get('shoulder') + value);
+        if (ts) simPeriods.set('shoulder',simPeriods.get('shoulder') + (value - s));
         if (tp) tp.set('shoulder',tp.get('shoulder') + p);
+        if (ts) ts.set('shoulder',ts.get('shoulder') + s);
         totalCost += value * sr;
+        totalSimCost += (value - s) * sr;
       }
     });
     return (
@@ -143,15 +182,19 @@ export default class RateCard extends React.Component
                 <tr>
                   <th>Period {firstDate} to {lastDate}</th>
                   { production ? <th>Solar Production</th> : null }
+                  { simulated ? <th>Simulated Solar</th> : null }
                   <th>Grid Use</th>
+                  { simulated ? <th>Simulated Grid</th> : null }
                   { production ? <th>Total Use</th> : null }
                   <th>Cost</th>
+                  { simulated ? [<th>Simulated Cost</th>,<th>Simulated Savings</th>] : null}
                 </tr>
               </thead>
               <tbody>
                 {
                   Array.from(periods, ([key, value]) => {
                     let p = production ? tp.get(key) : 0;
+                    let s = simulated ? ts.get(key) : 0;
                     var r = sr;
                     if (key === 'peak') {
                       r = pr;
@@ -159,13 +202,18 @@ export default class RateCard extends React.Component
                       r = or;
                     }                
                     let cost = (value * r).toFixed(2);
+                    let simValue = simulated ? simPeriods.get(key) : 0;
+                    let simCost = simulated ? (simValue * r).toFixed(2) : 0;
                     return (
                       <tr key={key}>
                         <td>{key}</td>
                         { production ? <td>{p.toFixed(2)} kWH</td> : null }
+                        { simulated ? <td>{s.toFixed(2)} kWH</td> : null}
                         <td>{value.toFixed(2)} kWH</td>
+                        { simulated ? <td>{simValue.toFixed(2)} kWH</td> : null }
                         { production ? <td>{(value+p).toFixed(2)} kWH</td> : null }
                         <td>${cost}</td>
+                        { simulated ? [<td>${simCost}</td>,<td>${(simCost-cost).toFixed(2)}</td>] : null }
                       </tr>
                     );
                   })
@@ -173,9 +221,12 @@ export default class RateCard extends React.Component
                 <tr>
                   <td>Total</td>
                   { production ? <td>{totalSolar.toFixed(2)} kWH</td> : null}
+                  { simulated ? <td>{totalSimulated.toFixed(2)} kWH</td> : null}
                   <td>{totalGrid.toFixed(2)} kWH</td>
+                  { simulated ? <td>{totalSimGrid.toFixed(2)} kWH</td> : null}
                   { production ? <td>{(totalSolar+totalGrid).toFixed(1)} kWH</td> : null }
                   <td>${totalCost.toFixed(2)}</td>
+                  { simulated ? [<td>${totalSimCost.toFixed(2)}</td>,<td>${(totalSimCost-totalCost).toFixed(2)}</td>] : null }
                 </tr>
               </tbody>
             </Table>

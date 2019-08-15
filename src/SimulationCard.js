@@ -12,6 +12,7 @@ export class SimulationCard extends React.Component {
     status: '',
     simulated: '',
   }
+
   render() {
     return ([
       <Card>
@@ -64,6 +65,7 @@ export class SimulationCard extends React.Component {
                     simulated: simulated,
                     status: `Loaded ${day} days of simulated production`
                   });
+                  localStorage.setItem('simulatedProduction',JSON.stringify([...simulated]))
                 }, error => {
                   this.setState({
                     status: `Error - ${error.toString()}`
@@ -79,7 +81,17 @@ export class SimulationCard extends React.Component {
           </InputGroup>
         </Card.Body>
       </Card>,
-      <RateCard usage={this.props.usage} production={this.props.production} simulated={this.props.simulated}/>
+      <RateCard usage={this.props.usage} production={this.props.production} simulated={this.state.simulated}/>
     ]);
+  }
+
+  componentDidMount() {
+    let stored = localStorage.getItem('simulatedProduction');
+    if (!this.state.simulated && stored) {
+      this.setState({
+        simulated: new Map(JSON.parse(stored)),
+        status: 'Retrieved previous simulation values',
+      })
+    }
   }
 }
