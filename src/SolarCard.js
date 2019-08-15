@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, Button, Alert, DropdownButton, Dropdown, InputGroup } from 'react-bootstrap';
-import RateCard from './RateCard';
 import qs from 'query-string';
 import { EnphaseAPI } from './Api';
 import ReactFileReader from 'react-file-reader';
