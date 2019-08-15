@@ -213,7 +213,7 @@ export default class RateCard extends React.Component
                         { simulated ? <td>{simValue.toFixed(2)} kWH</td> : null }
                         { production ? <td>{(value+p).toFixed(2)} kWH</td> : null }
                         <td>${cost}</td>
-                        { simulated ? [<td>${simCost}</td>,<td>${(simCost-cost).toFixed(2)}</td>] : null }
+                        { simulated ? [<td>${simCost}</td>,<td>${(cost-simCost).toFixed(2)}</td>] : null }
                       </tr>
                     );
                   })
@@ -226,7 +226,7 @@ export default class RateCard extends React.Component
                   { simulated ? <td>{totalSimGrid.toFixed(2)} kWH</td> : null}
                   { production ? <td>{(totalSolar+totalGrid).toFixed(1)} kWH</td> : null }
                   <td>${totalCost.toFixed(2)}</td>
-                  { simulated ? [<td>${totalSimCost.toFixed(2)}</td>,<td>${(totalSimCost-totalCost).toFixed(2)}</td>] : null }
+                  { simulated ? [<td>${totalSimCost.toFixed(2)}</td>,<td>${(totalCost-totalSimCost).toFixed(2)}</td>] : null }
                 </tr>
               </tbody>
             </Table>
