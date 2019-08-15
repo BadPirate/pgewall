@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Table, InputGroup, FormControl } from 'react-bootstrap';
 import PowerwallCard from './PowerwallCard';
+import { dayOfYear } from './utils';
 
 export default class RateCard extends React.Component 
 {
@@ -18,15 +19,6 @@ export default class RateCard extends React.Component
   {
     let map = new Map([[name, value]]);
     this.setState(map);
-  }
-
-  dayOfYear(date)
-  {
-    var start = new Date(date.getFullYear(), 0, 0);
-    var diff = (date - start) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
-    var oneDay = 1000 * 60 * 60 * 24;
-    var day = Math.floor(diff / oneDay);
-    return day;
   }
 
   render() {
@@ -83,7 +75,7 @@ export default class RateCard extends React.Component
       let time = parseInt(parts[0]);
       let s = 0;
       if(simulated) {
-        let doy = this.dayOfYear(new Date(date));
+        let doy = dayOfYear(date);
         s = simulated.get(`${doy}-${parseInt(time)}`);
         totalSimulated += s;
         totalSimGrid += value - s;
@@ -232,7 +224,7 @@ export default class RateCard extends React.Component
             </Table>
           </Card.Body>
         </Card>
-        <PowerwallCard usage={this.props.usage} peakStart={ps} peakEnd={pe} peakRate={pr}
+        <PowerwallCard usage={this.props.usage} peakStart={ps} peakEnd={pe} peakRate={pr} simulated={this.props.simulated}
                        offStart={os} offEnd={oe} offRate={or} shoulderRate={sr} production={this.props.production}/>
       </div>
     );

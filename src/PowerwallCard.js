@@ -1,6 +1,38 @@
 import React from 'react';
 import { Card, InputGroup, FormControl, Table } from 'react-bootstrap';
 import RoiCard from './RoiCard';
+import { dayOfYear } from './utils';
+
+/**
+ * @typedef {Object} CalculatedSavings
+ * @property {number} days number of days tracked
+ * @property {number} og Off-Peak Grid Use
+ * @property {number} ob Off-Peak Battery Use
+ * @property {number} ou Off-Peak Total Use
+ * @property {number} pg Peak Grid
+ * @property {number} pb Peak Battery
+ * @property {number} pu Peak Total
+ * @property {number} sg Shoulder Grid
+ * @property {number} sb Shoulder Battery
+ * @property {number} su Shoulder Use
+ */
+
+  /**
+  * @typedef {Object} CalculatedResult
+  * @property {string} period name for the relevant period
+  * @property {number} charged kWh battery charged during period
+  * @property {number} discharged kWh battery discharged during period
+  * @property {number} grid kWh pulled from grid during period
+  * @property {number} cost cost ($) for electric pulled from grid during period
+  * @property {number} savings savings provided by battery discharge
+  * @property {number} solarSavings savings provided by solar panels
+  */
+
+/**
+ * @typedef {Object} SimulationResults
+ * @property {CalculatedSavings} calc
+ * @property {[CalculatedResult]} results
+ */
 
 export default class PowerwallCard extends React.Component
 {
@@ -11,7 +43,17 @@ export default class PowerwallCard extends React.Component
   }
 
   render() {
-    let { calc, results } = this.results();
+    let ogResults = this.results();
+    let days = ogResults.calc.days;
+    let simulated = this.props.simulated;
+    let results = ogResults.results;
+    if (simulated) {
+      let simResults = this.results(0,1,true);
+      results = simResults.results.map((row, index) => {
+        row.solarSavings = row.savings - ogResults.results[index].savings;
+        return row;
+      });
+    }
     return (
       <div>
         <Card>
@@ -33,43 +75,53 @@ export default class PowerwallCard extends React.Component
                 </InputGroup.Text>
               </InputGroup.Prepend>
               <FormControl type="input" value={this.state.batteries} onChange={ e => { this.setState({ batteries: e.target.value })}}/>
-              <InputGroup.Text>
-                Usable Storage per Battery (kWH)
-              </InputGroup.Text>
-              <FormControl type="input" value={this.state.storagePer} onChange={ e => { this.setState({ storagePer: e.target.value })}}/>
-              <InputGroup.Text>
-                Round Trip Efficiency
-              </InputGroup.Text>
-              <FormControl type="input" value={this.state.efficiency} onChange={ e => { this.setState({ efficiency: e.target.value })}}/>
+              {
+                (parseInt(this.state.batteries) !== 0) ?
+                [
+                  <InputGroup.Text>
+                    Usable Storage per Battery (kWH)
+                  </InputGroup.Text>,
+                  <FormControl type="input" value={this.state.storagePer} onChange={ e => { this.setState({ storagePer: e.target.value })}}/>,
+                  <InputGroup.Text>
+                    Round Trip Efficiency
+                  </InputGroup.Text>,
+                  <FormControl type="input" value={this.state.efficiency} onChange={ e => { this.setState({ efficiency: e.target.value })}}/>
+                ] : null
+              }
             </InputGroup>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>Period ({calc.days} days)</th>
-                  <th>Charged Battery</th>
-                  <th>Discharged Battery</th>
-                  <th>Grid Use</th>
-                  <th>Cost</th>
-                  <th>Savings</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  results.map(row => {
-                    return (
-                      <tr key={row.period}>
-                        <td>{row.period}</td>
-                        <td>{row.charged.toFixed(2)} kWH</td>
-                        <td>{row.discharged.toFixed(2)} kWH</td>
-                        <td>{row.grid.toFixed(2)} kWH</td>
-                        <td>${row.cost.toFixed(2)}</td>
-                        <td>${row.savings.toFixed(2)}</td>
-                      </tr>
-                    );
-                  })
-                }
-              </tbody>
-            </Table>
+            {
+              (parseInt(this.state.batteries) !== 0) ?
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Period ({days} days)</th>
+                    <th>Charged Battery</th>
+                    <th>Discharged Battery</th>
+                    <th>Grid Use</th>
+                    <th>Cost</th>
+                    <th>Powerwall Savings</th>
+                    { simulated ? <th>Solar Savings</th> : null }
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    results.map(row => {
+                      return (
+                        <tr key={row.period}>
+                          <td>{row.period}</td>
+                          <td>{row.charged.toFixed(2)} kWH</td>
+                          <td>{row.discharged.toFixed(2)} kWH</td>
+                          <td>{row.grid.toFixed(2)} kWH</td>
+                          <td>${row.cost.toFixed(2)}</td>
+                          <td>${row.savings.toFixed(2)}</td>
+                          {simulated ? <td>${row.solarSavings.toFixed(2)}</td> : null}
+                        </tr>
+                      );
+                    })
+                  }
+                </tbody>
+              </Table> : null
+            }
           </Card.Body>
         </Card>
         <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} storage={this.state.storagePer} /> 
@@ -77,12 +129,19 @@ export default class PowerwallCard extends React.Component
     );
   }
 
+  /**
+   * @param {number=0} batteryDecay percentage of battery decay to simulate
+   * @param {number=1} rate electricity rate multiplier
+   * @param {boolean} simulated use solar simulation data
+   * @returns {SimulationResults} results
+   */
   results(
     batteryDecay = 0,
     rate = 1,
+    simulated = false,
   ) 
   {
-    let calc = this.calculateSavings(this.state.storagePer*(1-batteryDecay));
+    let calc = this.calculateSavings(this.state.storagePer*(1-batteryDecay),simulated ? this.props.simulated : null);
     let pr = this.props.peakRate;
     let or = this.props.offRate;
     let sr = this.props.shoulderRate;
@@ -135,8 +194,14 @@ export default class PowerwallCard extends React.Component
     return { calc, results };
   }
 
+   /**
+    * @param {number} storagePer kWh Storage Per Battery
+    * @param {any=null} simulated simulated solar production data
+    * @returns {CalculatedSavings}
+    */
   calculateSavings(
-    storagePer
+    storagePer,
+    simulated=null
   ) {
     let ps = this.props.peakStart;
     let pe = this.props.peakEnd;
@@ -168,6 +233,12 @@ export default class PowerwallCard extends React.Component
       let p = (production && production.get(key)) ? production.get(key) : 0;
       let parts = key.split(',');
       let date = parts[0];
+      let time = parts[1].split(':')[0];
+      if (simulated)
+      {
+        let doy = dayOfYear(date);
+        p += simulated.get(`${doy}-${parseInt(time)}`);
+      }
 
       if (!days.has(date)) {
         // It's a new day
@@ -186,8 +257,6 @@ export default class PowerwallCard extends React.Component
         }
       }
       
-      parts = parts[1].split(':');
-      let time = parseInt(parts[0]);
       let use = value + p;
       let available = use > 0 ? Math.min(use,(charge*efficiency)) : 0;
 
