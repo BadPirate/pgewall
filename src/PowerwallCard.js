@@ -43,17 +43,10 @@ export default class PowerwallCard extends React.Component
   }
 
   render() {
-    let ogResults = this.results();
-    let days = ogResults.calc.days;
     let simulated = this.props.simulated;
-    let results = ogResults.results;
-    if (simulated) {
-      let simResults = this.results(0,1,true);
-      results = simResults.results.map((row, index) => {
-        row.solarSavings = row.savings - ogResults.results[index].savings;
-        return row;
-      });
-    }
+    let sr = this.results(0,1,(simulated));
+    let days = sr.calc.days;
+    let results = sr.results;
     return (
       <div>
         <Card>
@@ -99,8 +92,8 @@ export default class PowerwallCard extends React.Component
                     <th>Discharged Battery</th>
                     <th>Grid Use</th>
                     <th>Cost</th>
-                    <th>Powerwall Savings</th>
-                    { simulated ? <th>Solar Savings</th> : null }
+                    <th>Powerwall Only Savings</th>
+                    { simulated ? <th>Powerwall + Solar Savings</th> : null }
                   </tr>
                 </thead>
                 <tbody>
@@ -124,7 +117,7 @@ export default class PowerwallCard extends React.Component
             }
           </Card.Body>
         </Card>
-        <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} storage={this.state.storagePer} /> 
+        <RoiCard results={this.results.bind(this)}  batteries={this.state.batteries} storage={this.state.storagePer} simulated={simulated} /> 
       </div>
     );
   }
@@ -142,6 +135,7 @@ export default class PowerwallCard extends React.Component
   ) 
   {
     let calc = this.calculateSavings(this.state.storagePer*(1-batteryDecay),simulated ? this.props.simulated : null);
+    let ogCalc = simulated ? this.calculateSavings(this.state.storagePer*(1-batteryDecay),false) : null;
     let pr = this.props.peakRate;
     let or = this.props.offRate;
     let sr = this.props.shoulderRate;
@@ -153,6 +147,7 @@ export default class PowerwallCard extends React.Component
         grid: calc.pg,
         cost: calc.pg * pr * rate,
         savings: calc.pb * pr * rate,
+        solarSavings: ogCalc ? (ogCalc.pg - calc.pg) * pr * rate : 0,
       },
       {
         period: "Off Peak",
@@ -161,6 +156,7 @@ export default class PowerwallCard extends React.Component
         grid: calc.og,
         cost: calc.og * or * rate,
         savings: calc.ob * or * rate,
+        solarSavings: ogCalc ? (ogCalc.og - calc.og) * or * rate : 0,
       },
       {
         period: "Shoulder",
@@ -169,6 +165,7 @@ export default class PowerwallCard extends React.Component
         grid: calc.sg,
         cost: calc.sg * sr * rate,
         savings: calc.sb * sr * rate,
+        solarSavings: ogCalc ? (ogCalc.sg - calc.sg) * sr * rate : 0,
       }
     ];
     let tca = 0;
@@ -176,12 +173,14 @@ export default class PowerwallCard extends React.Component
     let tg = 0;
     let tco = 0;
     let ts = 0;
+    let tss = 0;
     results.forEach(row => {
       tca += row.charged;
       td += row.discharged;
       tg += row.grid;
       tco += row.cost;
       ts += row.savings;
+      tss += row.solarSavings;
     });
     results.push({
       period: "Total",
@@ -190,6 +189,7 @@ export default class PowerwallCard extends React.Component
       grid: tg,
       cost: tco,
       savings: ts,
+      solarSavings: tss,
     });
     return { calc, results };
   }
@@ -227,17 +227,17 @@ export default class PowerwallCard extends React.Component
     let og = 0;
 
     let days = new Set();
-    let waste = 1/efficiency;
     this.props.usage.forEach((value, key) => {
       if (production && !production.has(key)) return;
       let p = (production && production.get(key)) ? production.get(key) : 0;
       let parts = key.split(',');
       let date = parts[0];
       let time = parts[1].split(':')[0];
+      let s = 0;
       if (simulated)
       {
         let doy = dayOfYear(date);
-        p += simulated.get(`${doy}-${parseInt(time)}`);
+        s = simulated.get(`${doy}-${parseInt(time)}`);
       }
 
       if (!days.has(date)) {
@@ -248,7 +248,7 @@ export default class PowerwallCard extends React.Component
         days.add(date);
 
         // If we aren't solar, we can charge during off-peak
-        if (!production && charge !== storage) {
+        if (!production && !simulated && charge !== storage) {
           let canStore = storage-charge;
           og += canStore;
           ob -= canStore;
@@ -256,41 +256,78 @@ export default class PowerwallCard extends React.Component
           ou += canStore;
         }
       }
-      
-      let use = value + p;
-      let available = use > 0 ? Math.min(use,(charge*efficiency)) : 0;
 
-      if (time >= ps && time < pe) {
-        // Peak
-        charge -= available*waste;
-        pb += available;
-        pg += use-available;
-        pu += use + p;
-      } else if (   (os > pe && time >= os && time < 24)
-                 || (time < oe) ) 
+      let period = "shoulder";
+      if (time >= ps && time < pe) period = "peak";
+      if ((os > pe && time >= os && time < 24) || (time < oe) ) period = "offpeak";
+
+      let charging = (production || simulated) && (period === 'shoulder' || period === 'offpeak');
+
+      let g = 0;
+      let b = 0;
+      let u = value+p;
+
+      if (charging)
       {
-        // Off-Peak
-        let canStore = storage-charge;
-        let store = Math.min(canStore,p);
-        charge += store;
-        ob -= store;
-        og += use+store;
-        ou += use + p;
-      } else {
-        // Shoulder
-        if (production) {
-          let canStore = storage-charge;
-          let store = Math.min(canStore,p);
-          charge += store;
-          sb -= store;
-          sg += use+store;
-          su += use + p;
-        } else {
-          charge -= available;
-          sb += available;
-          sg += use-available;
-          su += use;
+        // Grid is our use
+        g = u;
+
+        let storableProduction = Math.min(p, (storage-charge)/efficiency);
+        if (storableProduction)
+        {
+          // This actual production would have been used to charge Powerwall
+          let xfered = storableProduction*efficiency
+          b -= xfered;
+          charge += xfered;
+          p -= storableProduction;
         }
+
+        let storableSim = Math.min(s, (storage-charge)/efficiency);
+        if (storableSim)
+        {
+          // This sim production would have been used to charge Powerwall
+          let xfered = storableSim*efficiency
+          b -= xfered;
+          charge += xfered;
+          s -= storableSim;
+        }
+
+        // Any leftover production reduces grid use
+        g-=p+s;
+      } else {
+        // Grid starts with our usage
+        g = u;
+
+        let usableCharge = Math.min(charge, u);
+        if (usableCharge > 0)
+        {
+          // Discharging from battery first
+          b += usableCharge;
+          g -= usableCharge;
+          charge -= usableCharge;
+        }
+
+        // Any production goes to grid
+        g-=p+s;
+      }
+
+      switch(period)
+      {
+        case 'peak':
+          pg += g;
+          pb += b;
+          pu += u;
+          break;
+        case 'offpeak':
+          og += g;
+          ob += b;
+          ou += u;
+          break;
+        default:
+          sg += g;
+          sb += b;
+          su += u;
+          break;
       }
     });
     return {
