@@ -1,6 +1,6 @@
 {
   "name": "pge-wall",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
   "main": "server.js",
   "dependencies": {
