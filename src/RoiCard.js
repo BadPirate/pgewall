@@ -34,7 +34,7 @@ export default class RoiCard extends React.Component {
       unpaid -= savings * mod;
       breakdown.push({
         year: index + 1,
-        storage: this.props.storage/(1+decay),
+        storage: (this.props.storage*batteries)/(1+decay),
         charged: total.charged * mod,
         discharged: total.discharged * mod,
         grid: total.grid * mod,
