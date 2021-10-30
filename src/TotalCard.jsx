@@ -1,6 +1,7 @@
-import React from 'react';
-import { Card } from 'react-bootstrap';
+import React from 'react'
+import { Card } from 'react-bootstrap'
 
+// eslint-disable-next-line react/prefer-stateless-function
 export default class TotalCard extends React.Component {
   render() {
     return (
@@ -8,9 +9,8 @@ export default class TotalCard extends React.Component {
         <Card.Header>
           Savings
         </Card.Header>
-        <Card.Body>
-        </Card.Body>
+        <Card.Body />
       </Card>
-    );
+    )
   }
 }
