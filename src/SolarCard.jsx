@@ -1,257 +1,349 @@
 import React from 'react'
-import {
-  Card, Button, Alert,
-} from 'react-bootstrap'
-import qs from 'query-string'
 import ReactFileReader from 'react-file-reader'
 import PropTypes from 'prop-types'
-import { EnphaseAPI } from './Api'
+import {
+  Card, Button, ToggleButtonGroup, Tabs, Tab, Alert, Row, Col,
+} from 'react-bootstrap'
 import { logEvent } from './utils'
-import SimulationCard from './SimulationCard'
-import EnphaseComponent from './EnphaseComponent'
 import { logError, logInfo } from './Logging.mjs'
+import PWCard, { ContinueButton } from './PWCard'
+import SimulationCard from './SimulationCard'
+import { CSVColumn, parseCSV } from './parseCSV'
+import prodCalculation from './prodCalculation'
 
 const moment = require('moment')
-const { Map } = require('immutable')
-const dateFormat = require('dateformat')
+
+function NoSolarProductionTab({ hasNeg }) {
+  return (
+    <div>
+      {hasNeg ? (
+        <Alert variant="danger">
+          Warning, your usage shows negative values, indicating that
+          you have some form of production  already.  If this is solar,
+          please select the solar option above and upload solar data.
+          Without it, ROI will be difficult to calculate properly / unreliable
+        </Alert>
+      ) : null}
+      <Row>
+        <Col xs="auto">
+          {hasNeg ? <ContinueButton title="I know what I'm doing" variant="danger" /> : <ContinueButton />}
+        </Col>
+      </Row>
+    </div>
+  )
+}
+
+NoSolarProductionTab.propTypes = {
+  hasNeg: PropTypes.bool.isRequired,
+}
 
 export default class SolarCard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      production: '',
-      status: 'No data retrieved',
-      enphaseUserID: '',
-      enphaseSystems: '',
-      selected: '',
-      error: '',
+      production: null,
     }
   }
 
   componentDidMount() {
-    const { enphaseUserID, production } = this.state
-    const parseID = qs.parse(window.location.search).user_id
-    if (!enphaseUserID) {
-      if (parseID) {
-        localStorage.setItem('enphaseUserID', parseID)
-        window.location = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
-      }
-      const storedID = localStorage.getItem('enphaseUserID')
-      if (storedID) {
-        this.setState({
-          enphaseUserID: storedID,
-          status: 'Authenticated Enphase Enlighten.',
-        })
-        logEvent('EnphaseCard', 'authenticated')
-      }
-    }
+    const { production, haveSolar } = this.state
     if (!production) {
       const cached = localStorage.getItem('production')
       if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          this.setState({
+            production: new Map(parsed),
+          })
+        } catch (e) {
+          localStorage.removeItem('production')
+          this.setState({
+            error: 'Error loading saved production, cleared',
+          })
+          logError(e, cached)
+        }
+      }
+    }
+    if (!haveSolar) {
+      const cached = localStorage.getItem('haveSolar')
+      if (cached) {
         this.setState({
-          production: new Map(JSON.parse(cached)),
-          status: 'Retrieved cached production data.',
+          haveSolar: cached,
         })
       }
     }
-  }
-
-  setProduction(key, power) {
-    const { usage } = this.props
-    this.setState((state) => {
-      let map = state.production || new Map()
-      map = map.set(key, power)
-      const percentage = map.size / usage.size
-      localStorage.setItem('production', JSON.stringify([...map]))
-      logInfo(map.size, usage.size)
-      return {
-        production: map,
-        status: `Retrieving production ${percentage.toFixed(3)}%...`,
-      }
-    })
-  }
-
-  selectSystem(systemID) {
-    this.setState({
-      selected: systemID,
-    })
   }
 
   upload(files) {
     this.setState({
-      production: '',
-      status: 'Loading CSV...',
-      enphaseUserID: '',
-      enphaseSystems: '',
-      selected: '',
-      error: '',
+      error: null,
     })
-    const reader = new FileReader()
-    reader.onload = () => {
-      let production = new Map()
-      const dates = new Set()
-      let rows = 0
-      let errors = 0
-      reader.result.split('\n').forEach((line) => {
-        const parts = line.split(',')
-        let m = moment(parts[0])
-        if (!m.isValid()) {
-          const sub = parts[0].substr(0, 16)
-          m = moment(sub)
-          if (!m.isValid()) {
-            logInfo(`Invalid date format - ${parts[0]} or ${sub}`)
-            errors += 1
-            return
-          }
-        }
-        const date = m.toDate()
-        const kw = parseInt(parts[1], 10) / 1000
-        const key = `${dateFormat(date, 'yyyy-mm-dd,HH:00')}`
-        dates.add(dateFormat(date, 'yyyy-mm-dd'))
-        if (production.has(key)) {
-          const samples = production.get(key)
-          samples.push(kw)
-          production = production.set(key, samples)
-        } else {
-          production = production.set(key, [kw])
-        }
-        rows += 1
-      })
-      let collapsed = new Map()
-      production.forEach((values, key) => {
-        let sum = 0
-        values.forEach((v) => { sum += v })
-        collapsed = collapsed.set(key, sum / values.length)
-      })
-      production = collapsed
-      if (production.size === 0) {
-        this.setState({
-          error: 'No valid rows in CSV',
-        })
+
+    let { production } = this.state
+    production = production || new Map()
+    const added = new Set()
+
+    const kwc = new CSVColumn('kw', ['Solar Energy (kWh)', 'Solar (kW)'])
+    const wc = new CSVColumn('w', ['Energy Produced (Wh)'], [kwc])
+    kwc.alternates = [wc]
+    parseCSV(files[0], [
+      new CSVColumn('datetime', ['Date time', 'Date/Time']),
+      kwc,
+      wc,
+    ], ({ datetime, kw, w }) => {
+      const dp = parseFloat(kw || w / 1000)
+      if (Number.isNaN(dp)) return
+
+      const m = moment(datetime)
+      m.minute(0)
+      const dk = m.format('YYYY-MM-DD HH:mm')
+
+      if (added.has(dk)) {
+        production.set(dk, production.get() + dp)
       } else {
-        localStorage.setItem('production', JSON.stringify([...production]))
+        added.add(dk)
+        production.set(dk, dp)
+      }
+    }, (e) => {
+      let error = e
+      if (!error && added.size === 0) {
+        error = 'No rows added'
+      }
+      if (error) {
         this.setState({
-          status: `Loaded ${rows} rows from ${dates.size} days (${errors} errors) from CSV`,
-          error: '',
-          production,
+          error,
         })
+        return
       }
+      this.setState({
+        production,
+      })
+      localStorage.setItem('production', JSON.stringify([...production]))
       logEvent('SolarCard', 'loaded-csv')
-    }
-    reader.readAsText(files[0])
-  }
-
-  logoutEnphase() {
-    localStorage.setItem('enphaseUserID', '')
-    localStorage.setItem('production', '')
-    this.setState({
-      enphaseUserID: '',
-      status: 'Logged out Enphase',
-      enphaseSystems: '',
-      selected: '',
-      error: '',
-      production: '',
     })
-    logEvent('EnphaseCard', 'logout')
   }
 
-  render() {
-    const enphaseAppID = process.env.REACT_APP_ENPHASE_APP_ID
-    const {
-      enphaseUserID, error, enphaseSystems, status, selected, production,
-    } = this.state
+  uploadSolarTab() {
+    const { production } = this.state
     const { usage } = this.props
-    if (enphaseUserID && !error) {
-      const api = new EnphaseAPI(enphaseUserID)
-      if (!enphaseSystems && !error) {
-        api.getSystems()
-          .then((systems) => {
-            if (systems.length > 0) {
-              this.setState({
-                enphaseSystems: systems,
-                status: 'Systems loaded',
-                selected: 0,
-              })
-            } else {
-              throw new Error('No systems available')
-            }
-          })
-          .catch((e) => {
-            logError(error)
-            this.setState({
-              error: e.message,
-              status: 'Enlighten error',
-            })
-          })
+    let status = null
+    let solarBody = null
+    let summaryAlert = null
+    let earliest = null
+    let latest = null
+    let partial = null
+    let complete = null
+    let next = null
+    let truncatedProduction = null
+
+    let variant = 'warning'
+    if (!production) {
+      status = 'No solar production loaded'
+    } else {
+      let average
+      let valid
+      ({
+        average, valid, earliest, latest, complete, partial, truncatedProduction,
+      } = prodCalculation(usage, production))
+      const averageDaily = Math.round(average)
+      if (valid) {
+        status = `365 days, average daily production: ${averageDaily} kW`
+        variant = 'success'
+      } else if (partial.size === 0 && complete.size === 0) {
+        status = 'No data loaded'
+      } else {
+        status = `${complete.size}d complete / ${partial.size}d partial, average daily production ${averageDaily}kW, between ${earliest.format('YYYY-MM-DD')} and ${latest.format('YYYY-MM-DD')}`
       }
+      summaryAlert = <Alert variant={variant}>{status}</Alert>
     }
-    return (
+
+    solarBody = (
       <div>
-        <Card>
-          <Card.Header>
-            Solar
-          </Card.Header>
-          { error ? <Alert variant="danger">{error}</Alert> : null }
-          <Alert variant="info">{status}</Alert>
-          <Card.Body>
-            <Card.Text>
-              When Solar is installed Powerwall can only charge from Solar (not grid).  In order to
-              simulate we need to know about Solar Generation, currently
-              (because it&apos;s what I use) this tool supports the Enlighten Systems
-              monitoring API. If you&apos;d like it to support your use case
-              {' '}
-              <a href="https://github.com/BadPirate/pgewall/issues/new">file an issue</a>
-              .
-            </Card.Text>
-            {
-              enphaseAppID
-                ? (
-                  <EnphaseComponent
-                    enphaseAppID={enphaseAppID}
-                    enphaseUserID={enphaseUserID}
-                    enphaseSystems={enphaseSystems}
-                    selected={selected}
-                    select={(systemID) => { this.selectSystem(systemID) }}
-                    usage={usage}
-                    logout={() => { this.logoutEnphase() }}
-                    production={production}
-                    setProduction={(key, power) => { this.setProduction(key, power) }}
-                  />
-                )
-                : (
-                  <Alert variant="danger">
-                    Must set
-                    {' '}
-                    <code>REACT_APP_ENPHASE_APP_ID</code>
-                    {' '}
-                    environmental variable to Enphase Developer App ID in order to
-                    enable Enphase integration
-                  </Alert>
-                )
-            }
-            <hr />
-            <Card.Text>
-              You can also upload your production data in a CSV with two colums:
-            </Card.Text>
+        <Tabs defaultActiveKey="enphase">
+          <Tab eventKey="enphase" title="Enphase Enlighten">
+            <Card.Text>Import solar production data from Enphase</Card.Text>
             <ul>
-              <li>Date of the start of production period (any Javascript parseable format)</li>
-              <li>
-                Watt Hour Sample for that production period, will be averaged with other
-                samples from the same hour
-              </li>
+              <li>Go to enlighten website</li>
+              <li>Select My enlighten to get to dashboard</li>
+              <li>Select Menu, Reports to get to report generate screen</li>
+              <li>Pick time window and select daily report</li>
+              <li>Upload below</li>
             </ul>
-            <Card.Text>Periods must be less than 1 hour to match with PGE Data.</Card.Text>
             <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
               <Button className="btn" variation="primary">Upload Production CSV</Button>
             </ReactFileReader>
-          </Card.Body>
-        </Card>
-        { production ? <SimulationCard usage={usage} production={production} /> : null }
+          </Tab>
+          <Tab eventKey="tesla" title="Tesla">
+            <Card.Text>Import solar production data from Tesla</Card.Text>
+            <ul>
+              <li>Open Tesla Mobile App</li>
+              <li>Go to Energy</li>
+              <li>
+                Export each month for your usage period (that you have) using
+                Download My Data option
+              </li>
+              <li>Upload below</li>
+            </ul>
+            <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
+              <Button className="btn" variation="primary">Upload Production CSV</Button>
+            </ReactFileReader>
+          </Tab>
+          <Tab eventKey="csv" title="CSV">
+            <Card.Text>Import solar production data from CSV</Card.Text>
+            <ul>
+              <li>
+                <b>Date time</b>
+                : RFC standard date time stamp, if there are multiple per hour they
+                will be joined into hourly production
+              </li>
+              <li>
+                <b>Solar (kW)</b>
+                : kW generated starting with Date Time and
+                ending with next entry
+              </li>
+            </ul>
+            <Row>
+              <Col xs="auto">
+                <Button variant="info" href="/sample_production.csv">Download Template</Button>
+              </Col>
+              <Col xs="auto">
+                <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
+                  <Button className="btn" variation="primary">Upload Production CSV</Button>
+                </ReactFileReader>
+              </Col>
+            </Row>
+          </Tab>
+        </Tabs>
+        <div style={{ marginTop: '1em' }}>
+          {summaryAlert}
+        </div>
+        <Row>
+          {complete.size + partial.size > 0 && complete.size < 365 ? (
+            <Col xs="auto">
+              <ContinueButton title="Fill in missing solar information using simulator" />
+            </Col>
+          ) : null }
+          {complete.size === 365 ? (
+            <Col xs="auto">
+              <ContinueButton />
+            </Col>
+          ) : null }
+          <Col fluid={1} />
+          {complete.size + partial.size > 0 ? (
+            <Col xs="auto">
+              <Button
+                variant="danger"
+                onClick={() => {
+                  this.setState({
+                    production: new Map(),
+                  })
+                  localStorage.removeItem('production')
+                }}
+              >
+                Reset
+              </Button>
+            </Col>
+          ) : null}
+        </Row>
       </div>
+    )
+    if (truncatedProduction.size > 0) {
+      next = <SimulationCard usage={usage} production={truncatedProduction} key="simulate" />
+    }
+    return {
+      status, summaryAlert, solarBody, next,
+    }
+  }
+
+  render() {
+    const {
+      error, production, haveSolar,
+    } = this.state
+    const { usage, hasNeg } = this.props
+
+    logInfo(hasNeg)
+
+    let summaryAlert = null
+    let solarBody = null
+    let status = null
+    let next = null
+
+    switch (haveSolar) {
+      case 'have':
+        ({
+          status, summaryAlert, solarBody, next,
+        } = this.uploadSolarTab(production,
+          status, usage, summaryAlert, solarBody, error))
+        break
+      case 'want':
+        solarBody = <NoSolarProductionTab hasNeg={hasNeg} />
+        next = <SimulationCard usage={usage} production={new Map()} key="simulation" />
+        status = 'No current solar provided'
+        break
+      case 'none':
+        solarBody = <NoSolarProductionTab hasNeg={hasNeg} />
+        status = 'No current solar provided'
+        break
+      default: break
+    }
+
+    const updateHave = (value) => this.setState({
+      haveSolar: value,
+    })
+    function ModeToggleButton(props) {
+      return (
+        <Button
+          key={props.buttonValue}
+          variant={haveSolar === props.buttonValue ? 'primary' : 'secondary'}
+          value={props.buttonValue}
+          onClick={() => {
+            localStorage.setItem('haveSolar', props.buttonValue)
+            updateHave(props.buttonValue)
+          }}
+        >
+          {props.buttonTitle}
+        </Button>
+      )
+    }
+
+    const body = (
+      <div>
+        <Card.Text key="assume">
+          For this utility, it is assumed that your electric utility functions like PG&amp;E,
+          Which is to say, if you have solar (or are planning to add solar)
+          you will be on NEM (Net energy metering) where the utility company pays you for time
+          of use when you put electricity back on the grid at the same rate it would charge
+          you for taking electric off the grid.  Additionally, if you have NEM and a powerwall
+          it is assumed that you will not be allowed to charge powerwall from grid, but instead
+          will have to charge from solar alone.  Thus, if you have solar currently you must
+          upload production data to align with your usage data.  If you do not have solar you
+          may choose to simulate solar production to see what kind of savings that might provide
+          on its own, or with some new powerwalls.
+        </Card.Text>
+        <ToggleButtonGroup type="radio" name="mode" style={{ marginBottom: '1em' }}>
+          <ModeToggleButton buttonValue="have" buttonTitle="Currently have solar" />
+          <ModeToggleButton buttonValue="want" buttonTitle="Do not have solar, want to add" />
+          <ModeToggleButton buttonValue="none" buttonTitle="Do not have / want solar" />
+        </ToggleButtonGroup>
+        {solarBody}
+        {error ? (
+          <Alert variant="danger">
+            {error}
+          </Alert>
+        ) : null}
+      </div>
+    )
+    return (
+      <PWCard title="Solar Production" key="solar" body={body} progress={status} next={next} />
     )
   }
 }
 
 SolarCard.propTypes = {
   usage: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
+  hasNeg: PropTypes.bool,
+}
+
+SolarCard.defaultProps = {
+  hasNeg: false,
 }

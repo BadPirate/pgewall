@@ -1,15 +1,42 @@
 .App {
+  padding-bottom: 1em;
+}
+
+body {
   background: lightseagreen;
-  height: 100%;
 }
 
 .card {
   margin-bottom: 1em;
-  margin-left: 1em;
-  margin-right: 1em;
+  padding-bottom: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.card-header {
+  margin-left: -1em;
+  margin-right: -1em;
+  margin-bottom: .5em;
 }
 
 .table {
   margin-top: 1em;
   margin-bottom: 1em;
+}
+
+.card-header-tabs {
+  margin-bottom: -1px;
+  margin-left: 0px;
+  z-index: 1;
+}
+
+.tab-content {
+  border: #dee2e6;
+  border-width: 1px;
+  border-style: solid;
+  padding: 1em;
+}
+
+.form-control {
+  min-width: 100px;
 }

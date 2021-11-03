@@ -39,3 +39,9 @@ export function dayOfYear(givenDate) {
   const day = Math.floor(diff / oneDay)
   return day
 }
+
+export function pad(num, size) {
+  let ns = num.toString()
+  while (ns.length < size) ns = `0${ns}`
+  return ns
+}
