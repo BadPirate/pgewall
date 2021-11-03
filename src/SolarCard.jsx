@@ -106,7 +106,7 @@ export default class SolarCard extends React.Component {
       }
     }, (e) => {
       let error = e
-      if (!error && added.size === 0) {
+      if (!error && (!added || added.size === 0)) {
         error = 'No rows added'
       }
       if (error) {
@@ -149,13 +149,16 @@ export default class SolarCard extends React.Component {
       if (valid) {
         status = `365 days, average daily production: ${averageDaily} kW`
         variant = 'success'
-      } else if (partial.size === 0 && complete.size === 0) {
+      } else if ((!partial || partial.size === 0) && (!complete || complete.size === 0)) {
         status = 'No data loaded'
       } else {
         status = `${complete.size}d complete / ${partial.size}d partial, average daily production ${averageDaily}kW, between ${earliest.format('YYYY-MM-DD')} and ${latest.format('YYYY-MM-DD')}`
       }
       summaryAlert = <Alert variant={variant}>{status}</Alert>
     }
+
+    const completeCount = complete ? complete.size : 0
+    const partialCount = partial ? partial.size : 0
 
     solarBody = (
       <div>
@@ -218,18 +221,18 @@ export default class SolarCard extends React.Component {
           {summaryAlert}
         </div>
         <Row>
-          {complete.size + partial.size > 0 && complete.size < 365 ? (
+          {completeCount + partialCount > 0 && completeCount < 365 ? (
             <Col xs="auto">
               <ContinueButton title="Fill in missing solar information using simulator" />
             </Col>
           ) : null }
-          {complete.size === 365 ? (
+          {completeCount === 365 ? (
             <Col xs="auto">
               <ContinueButton />
             </Col>
           ) : null }
           <Col fluid={1} />
-          {complete.size + partial.size > 0 ? (
+          {completeCount + partialCount > 0 ? (
             <Col xs="auto">
               <Button
                 variant="danger"
@@ -247,7 +250,7 @@ export default class SolarCard extends React.Component {
         </Row>
       </div>
     )
-    if (truncatedProduction.size > 0) {
+    if (truncatedProduction && truncatedProduction.size > 0) {
       next = <SimulationCard usage={usage} production={truncatedProduction} key="simulate" />
     }
     return {

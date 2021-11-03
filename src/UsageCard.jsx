@@ -139,7 +139,7 @@ export default class UsageCard extends React.Component {
           mcEnd = contiguousEnd
         }
         const day = days.get(dk)
-        if (day.size === 24 || day.size === 23 /* probably dst */) {
+        if (day && (day.size === 24 || day.size === 23) /* probably dst */) {
           completeCount += 1
           day.forEach((v, i) => {
             ratioDay.set(i, (ratioDay.get(i) || 0) + v)
@@ -148,7 +148,7 @@ export default class UsageCard extends React.Component {
             if (v < 0) hasNeg = true
           })
         } else {
-          logInfo('Partial', day.size, day, dk)
+          logInfo('Partial', day ? day.size : 0, day, dk)
           partial.push(dk)
         }
       })
@@ -197,7 +197,7 @@ export default class UsageCard extends React.Component {
                         totalRatio += v
                       })
                       partial.forEach((dk) => {
-                        logInfo('before', update.size)
+                        logInfo('before', update ? update.size : 0)
                         const day = days.get(dk)
                         let dayTotal = 0
                         day.forEach((v) => {

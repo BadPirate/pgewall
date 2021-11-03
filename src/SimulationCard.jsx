@@ -118,7 +118,9 @@ export default class SimulationCard extends React.Component {
     let next = null
     let body = null
 
-    const missingDays = Math.max(365 - complete.size - partial.size, 0)
+    const completeCount = complete ? complete.size : 0
+    const partialCount = partial ? partial.size : 0
+    const missingDays = Math.max(365 - completeCount - partialCount, 0)
     if (simulated) {
       const { average: simAverage } = prodCalculation(usage, simulated)
       if (production) {
@@ -247,7 +249,7 @@ export default class SimulationCard extends React.Component {
       )
 
       next = <RateCard production={estimatedProduction} usage={usage} key="rate" start={earliest} />
-    } else if (complete.size < 365) {
+    } else if (completeCount < 365) {
       progress = 'Estimate incomplete solar production'
       body = (
         <div>
@@ -259,8 +261,8 @@ export default class SimulationCard extends React.Component {
             type={type}
           />
           <Alert variant="warning" style={{ marginTop: '1em' }}>
-            {missingDays > 0 ? `You have are missing solar data for ${365 - complete.size - partial.size} days.  ` : null}
-            {partial.size > 0 ? `You are missing hourly information for ${partial.size} days.  ` : null}
+            {missingDays > 0 ? `You have are missing solar data for ${365 - completeCount - partialCount} days.  ` : null}
+            {partialCount > 0 ? `You are missing hourly information for ${partialCount} days.  ` : null}
             Simulator can be used to estimate this information.
             Output will be scaled based on the average known
             / daily output of your current system, to create a ratio based result.

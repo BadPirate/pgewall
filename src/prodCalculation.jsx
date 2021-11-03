@@ -44,7 +44,7 @@ export default function prodCalculation(usage, production) {
       partial.set(k, v)
     }
   })
-  const valid = complete.size === 365
+  const valid = complete && complete.size === 365
   average /= averageCount
   return {
     average, prodDays, valid, earliest, latest, complete, partial, truncatedProduction,
