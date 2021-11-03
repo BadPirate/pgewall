@@ -9,7 +9,7 @@ import { logEvent, pad } from './utils'
 import { logError, logInfo } from './Logging.mjs'
 import PWCard, { ContinueButton } from './PWCard'
 import SolarCard from './SolarCard'
-import { parseCSV, CSVColumn } from './parseCSV'
+import { parseCSVs, CSVColumn } from './parseCSV'
 
 const clearState = {
   progress: 'No Data Loaded',
@@ -66,26 +66,23 @@ export default class UsageCard extends React.Component {
       usage.set(start, parseFloat(kwh))
     }
 
-    parseCSV(files[0], columns, onRow, (e) => {
-      let error = e
-      if (!error && added === 0) {
-        error = Error('No new data found.')
-      }
+    parseCSVs(files, columns, onRow)
+      .then(() => {
+        if (added === 0) {
+          throw Error('No new data found.')
+        }
+        this.setState({
+          usage,
+        })
+        localStorage.setItem('usage', JSON.stringify([...usage]))
 
-      if (error) {
+        logEvent('UsageCard', 'loaded-csv')
+      })
+      .catch((error) => {
         this.setState({
           error,
         })
-        return
-      }
-
-      this.setState({
-        usage,
       })
-      localStorage.setItem('usage', JSON.stringify([...usage]))
-
-      logEvent('UsageCard', 'loaded-csv')
-    })
   }
 
   render() {
@@ -341,7 +338,7 @@ export default class UsageCard extends React.Component {
               <li>Upload electric csv below</li>
               <li>Repeat until you have uploaded all periods of typical use</li>
             </ul>
-            <ReactFileReader handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
+            <ReactFileReader multipleFiles handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
               <Button className="btn" variation="primary">Upload</Button>
             </ReactFileReader>
           </Tab>

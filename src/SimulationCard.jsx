@@ -238,7 +238,7 @@ export default class SimulationCard extends React.Component {
                   this.setState({
                     estimatedProduction: null,
                   })
-                  localStorage.removeItem('estimatedStorage')
+                  localStorage.removeItem('estimatedProduction')
                 }}
               >
                 Clear Estimate
@@ -253,13 +253,84 @@ export default class SimulationCard extends React.Component {
       progress = 'Estimate incomplete solar production'
       body = (
         <div>
-          <SimulatorComponent
-            capacity={capacity}
-            losses={losses}
-            tilt={tilt}
-            address={address}
-            type={type}
-          />
+          <div>
+            <InputGroup>
+              <FormControl
+                placeholder="Capacity"
+                onChange={(e) => {
+                  this.setState({
+                    capacity: e.target.value,
+                  })
+                }}
+                value={capacity}
+                required
+              />
+              <InputGroup.Text>kW</InputGroup.Text>
+              <DropdownButton title={type || 'Panel Type'} variant="outline-secondary">
+                <Dropdown.Item onClick={() => {
+                  this.setState({
+                    type: 'Standard',
+                  })
+                }}
+                >
+                  Standard
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => {
+                  this.setState({
+                    type: 'Premium',
+                  })
+                }}
+                >
+                  Premium
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => {
+                  this.setState({
+                    type: 'Thin Film',
+                  })
+                }}
+                >
+                  Thin Film
+                </Dropdown.Item>
+              </DropdownButton>
+            </InputGroup>
+            <InputGroup>
+              <InputGroup.Text>Losses</InputGroup.Text>
+              <FormControl
+                placeholder="losses"
+                onChange={(e) => {
+                  this.setState({
+                    losses: e.target.value,
+                  })
+                }}
+                value={losses}
+              />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+            <InputGroup>
+              <InputGroup.Text>Tilt</InputGroup.Text>
+              <FormControl
+                placeholder="tilt"
+                onChange={(e) => {
+                  this.setState({
+                    tilt: e.target.value,
+                  })
+                }}
+                value={tilt}
+              />
+              <InputGroup.Text>degs</InputGroup.Text>
+            </InputGroup>
+            <InputGroup>
+              <FormControl
+                placeholder="address"
+                onChange={(e) => {
+                  this.setState({
+                    address: e.target.value,
+                  })
+                }}
+                value={address}
+              />
+            </InputGroup>
+          </div>
           <Alert variant="warning" style={{ marginTop: '1em' }}>
             {missingDays > 0 ? `You have are missing solar data for ${365 - completeCount - partialCount} days.  ` : null}
             {partialCount > 0 ? `You are missing hourly information for ${partialCount} days.  ` : null}
@@ -327,89 +398,6 @@ export default class SimulationCard extends React.Component {
           >
             Estimate production using simulated production and known production values
           </Button>
-        </div>
-      )
-    }
-
-    function SimulatorComponent() {
-      return (
-        <div>
-          <InputGroup>
-            <FormControl
-              placeholder="Capacity"
-              onChange={(e) => {
-                this.setState({
-                  capacity: e.target.value,
-                })
-              }}
-              value={capacity}
-              required
-            />
-            <InputGroup.Text>kW</InputGroup.Text>
-            <DropdownButton title={type || 'Panel Type'} variant="outline-secondary">
-              <Dropdown.Item onClick={() => {
-                this.setState({
-                  type: 'Standard',
-                })
-              }}
-              >
-                Standard
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => {
-                this.setState({
-                  type: 'Premium',
-                })
-              }}
-              >
-                Premium
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => {
-                this.setState({
-                  type: 'Thin Film',
-                })
-              }}
-              >
-                Thin Film
-              </Dropdown.Item>
-            </DropdownButton>
-          </InputGroup>
-          <InputGroup>
-            <InputGroup.Text>Losses</InputGroup.Text>
-            <FormControl
-              placeholder="losses"
-              onChange={(e) => {
-                this.setState({
-                  losses: e.target.value,
-                })
-              }}
-              value={losses}
-            />
-            <InputGroup.Text>%</InputGroup.Text>
-          </InputGroup>
-          <InputGroup>
-            <InputGroup.Text>Tilt</InputGroup.Text>
-            <FormControl
-              placeholder="tilt"
-              onChange={(e) => {
-                this.setState({
-                  tilt: e.target.value,
-                })
-              }}
-              value={tilt}
-            />
-            <InputGroup.Text>degs</InputGroup.Text>
-          </InputGroup>
-          <InputGroup>
-            <FormControl
-              placeholder="address"
-              onChange={(e) => {
-                this.setState({
-                  address: e.target.value,
-                })
-              }}
-              value={address}
-            />
-          </InputGroup>
         </div>
       )
     }

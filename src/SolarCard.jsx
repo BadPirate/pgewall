@@ -8,7 +8,7 @@ import { logEvent } from './utils'
 import { logError, logInfo } from './Logging.mjs'
 import PWCard, { ContinueButton } from './PWCard'
 import SimulationCard from './SimulationCard'
-import { CSVColumn, parseCSV } from './parseCSV'
+import { CSVColumn, parseCSVs } from './parseCSV'
 import prodCalculation from './prodCalculation'
 
 const moment = require('moment')
@@ -86,11 +86,12 @@ export default class SolarCard extends React.Component {
     const kwc = new CSVColumn('kw', ['Solar Energy (kWh)', 'Solar (kW)'])
     const wc = new CSVColumn('w', ['Energy Produced (Wh)'], [kwc])
     kwc.alternates = [wc]
-    parseCSV(files[0], [
+    const columns = [
       new CSVColumn('datetime', ['Date time', 'Date/Time']),
       kwc,
       wc,
-    ], ({ datetime, kw, w }) => {
+    ]
+    const onRow = ({ datetime, kw, w }) => {
       const dp = parseFloat(kw || w / 1000)
       if (Number.isNaN(dp)) return
 
@@ -104,23 +105,23 @@ export default class SolarCard extends React.Component {
         added.add(dk)
         production.set(dk, dp)
       }
-    }, (e) => {
-      let error = e
-      if (!error && (!added || added.size === 0)) {
-        error = 'No rows added'
-      }
-      if (error) {
+    }
+    parseCSVs(files, columns, onRow)
+      .then(() => {
+        if (!added || added.size === 0) {
+          throw Error('No rows added')
+        }
+        this.setState({
+          production,
+        })
+        localStorage.setItem('production', JSON.stringify([...production]))
+        logEvent('SolarCard', 'loaded-csv')
+      })
+      .catch((error) => {
         this.setState({
           error,
         })
-        return
-      }
-      this.setState({
-        production,
       })
-      localStorage.setItem('production', JSON.stringify([...production]))
-      logEvent('SolarCard', 'loaded-csv')
-    })
   }
 
   uploadSolarTab() {
@@ -172,7 +173,7 @@ export default class SolarCard extends React.Component {
               <li>Pick time window and select daily report</li>
               <li>Upload below</li>
             </ul>
-            <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
+            <ReactFileReader multipleFiles handleFiles={(f) => this.upload(f)} fileTypes=".csv">
               <Button className="btn" variation="primary">Upload Production CSV</Button>
             </ReactFileReader>
           </Tab>
