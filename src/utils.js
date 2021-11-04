@@ -1,3 +1,4 @@
+import moment from 'moment'
 import ReactGA from 'react-ga'
 import { logInfo } from './Logging.mjs'
 
@@ -44,4 +45,15 @@ export function pad(num, size) {
   let ns = num.toString()
   while (ns.length < size) ns = `0${ns}`
   return ns
+}
+
+export function earliestMoment(usage) {
+  let firstMoment = null
+  usage.forEach((v, k) => {
+    const m = moment(k)
+    if (!firstMoment || m < firstMoment) {
+      firstMoment = m
+    }
+  })
+  return firstMoment
 }

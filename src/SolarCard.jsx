@@ -4,12 +4,13 @@ import PropTypes from 'prop-types'
 import {
   Card, Button, ToggleButtonGroup, Tabs, Tab, Alert, Row, Col,
 } from 'react-bootstrap'
-import { logEvent } from './utils'
+import { earliestMoment, logEvent } from './utils'
 import { logError, logInfo } from './Logging.mjs'
 import PWCard, { ContinueButton } from './PWCard'
 import SimulationCard from './SimulationCard'
 import { CSVColumn, parseCSVs } from './parseCSV'
 import prodCalculation from './prodCalculation'
+import RateCard from './RateCard'
 
 const moment = require('moment')
 
@@ -279,12 +280,13 @@ export default class SolarCard extends React.Component {
         break
       case 'want':
         solarBody = <NoSolarProductionTab hasNeg={hasNeg} />
-        next = <SimulationCard usage={usage} production={new Map()} key="simulation" />
+        next = <SimulationCard usage={usage} key="simulation" />
         status = 'No current solar provided'
         break
       case 'none':
         solarBody = <NoSolarProductionTab hasNeg={hasNeg} />
         status = 'No current solar provided'
+        next = <RateCard usage={usage} production={new Map()} start={earliestMoment(usage)} />
         break
       default: break
     }

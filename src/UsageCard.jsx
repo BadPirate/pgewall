@@ -432,7 +432,11 @@ export default class UsageCard extends React.Component {
           </Alert>
         ) : null }
         <Row style={{ marginTop: '1em' }}>
-          { button }
+          { button ? (
+            <Col xs="auto">
+              {button}
+            </Col>
+          ) : null }
           { needsSave ? (
             <Col xs="auto">
               <Button
