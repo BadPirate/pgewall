@@ -81,7 +81,7 @@ export default class SolarCard extends React.Component {
 
     let { production } = this.state
     production = production || new Map()
-    const added = new Set()
+    const added = new Map()
 
     const kwc = new CSVColumn('kw', ['Solar Energy (kWh)', 'Solar (kW)'])
     const wc = new CSVColumn('w', ['Energy Produced (Wh)'], [kwc])
@@ -96,25 +96,23 @@ export default class SolarCard extends React.Component {
       if (Number.isNaN(dp)) return
 
       const m = moment(datetime)
+      if (!m.isValid()) return
       m.minute(0)
       const dk = m.format('YYYY-MM-DD HH:mm')
-
-      if (added.has(dk)) {
-        production.set(dk, production.get() + dp)
-      } else {
-        added.add(dk)
-        production.set(dk, dp)
-      }
+      added.set(dk, added.has(dk) ? added.get(dk) + dp : dp)
     }
+
     parseCSVs(files, columns, onRow)
       .then(() => {
-        if (!added || added.size === 0) {
+        if (added.size === 0) {
           throw Error('No rows added')
         }
+        const u = new Map(production)
+        added.forEach((v, k) => u.set(k, v))
         this.setState({
-          production,
+          production: u,
         })
-        localStorage.setItem('production', JSON.stringify([...production]))
+        localStorage.setItem('production', JSON.stringify([...u]))
         logEvent('SolarCard', 'loaded-csv')
       })
       .catch((error) => {
@@ -148,7 +146,7 @@ export default class SolarCard extends React.Component {
       } = prodCalculation(usage, production))
       const averageDaily = Math.round(average)
       if (valid) {
-        status = `365 days, average daily production: ${averageDaily} kW`
+        status = `${complete.size} days, average daily production: ${averageDaily} kW`
         variant = 'success'
       } else if ((!partial || partial.size === 0) && (!complete || complete.size === 0)) {
         status = 'No data loaded'
@@ -227,7 +225,7 @@ export default class SolarCard extends React.Component {
               <ContinueButton title="Fill in missing solar information using simulator" />
             </Col>
           ) : null }
-          {completeCount === 365 ? (
+          {completeCount >= 365 ? (
             <Col xs="auto">
               <ContinueButton />
             </Col>

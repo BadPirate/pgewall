@@ -1,26 +1,31 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {
-  Card, InputGroup, FormControl,
+  Card, InputGroup, FormControl, Row, Col, Button,
 } from 'react-bootstrap'
 import moment from 'moment'
 import PowerwallCard from './PowerwallCard'
 import PWCard, { ContinueButton } from './PWCard'
+import { logError } from './Logging.mjs'
 
 export default class RateCard extends React.Component {
   constructor(props) {
     super(props)
-    const rates = {
-      peakStart: 16,
-      peakEnd: 21,
-      peakRate: 0.5,
-      offStart: 0,
-      offEnd: 12,
-      offRate: 0.19,
-      shoulderRate: 0.39,
-    }
-    this.state = {
-      rates,
+    this.state = {}
+  }
+
+  componentDidMount() {
+    const { rates } = this.state
+    if (!rates) {
+      const cached = localStorage.getItem('rates')
+      if (cached) {
+        try {
+          const j = JSON.parse(cached)
+          this.setState({ rates: j })
+        } catch (e) {
+          logError('Error loading cached rates', e)
+        }
+      }
     }
   }
 
@@ -33,7 +38,19 @@ export default class RateCard extends React.Component {
     const {
       production, usage, simulated, start,
     } = this.props
-    const { rates } = this.state
+    let { rates } = this.state
+    const { changed } = this.state
+    if (!rates) {
+      rates = {
+        peakStart: 16,
+        peakEnd: 21,
+        peakRate: 0.5,
+        offRate: 0.19,
+        shoulderStart: 15,
+        shoulderEnd: 24,
+        shoulderRate: 0.39,
+      }
+    }
 
     const body = (
       <div>
@@ -42,7 +59,8 @@ export default class RateCard extends React.Component {
           quite a bit.  Pre-filled in is the 2021 EV-A plan with PG&amp;E, a net energy metering
           plan that has a good time of use distribution for powerwall savings, feel free to try
           other plan rates in here to better understand savings.  Note times are all
-          in military (00 - 23), and minutes are assumed to be :00.
+          in military (00 - 23), and minutes are assumed to be :00.  If your provider does not
+          have a shoulder rate, put in the same times as peak.
         </Card.Text>
         <InputGroup>
           <InputGroup.Text>
@@ -55,9 +73,10 @@ export default class RateCard extends React.Component {
             as="input"
             onChange={(e) => {
               const u = { ...rates }
-              u.peakStart = parseInt(e.target.value, 10)
+              u.peakStart = parseInt(e.target.value, 10) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
             value={rates.peakStart}
@@ -69,9 +88,10 @@ export default class RateCard extends React.Component {
             as="input"
             onChange={(e) => {
               const u = { ...rates }
-              u.peakEnd = e.target.value.parseInt()
+              u.peakEnd = parseInt(e.target.value, 10) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
             value={rates.peakEnd}
@@ -86,6 +106,7 @@ export default class RateCard extends React.Component {
               u.peakRate = parseFloat(e.target.value) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
             value={rates.peakRate}
@@ -93,7 +114,7 @@ export default class RateCard extends React.Component {
         </InputGroup>
         <InputGroup>
           <InputGroup.Text>
-            Off-Peak
+            Shoulder
           </InputGroup.Text>
           <InputGroup.Text>
             From
@@ -102,12 +123,13 @@ export default class RateCard extends React.Component {
             as="input"
             onChange={(e) => {
               const u = { ...rates }
-              u.offStart = e.target.value.parseInt()
+              u.shoulderStart = parseInt(e.target.value, 10) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
-            value={rates.offStart}
+            value={rates.shoulderStart}
           />
           <InputGroup.Text>
             To
@@ -116,32 +138,14 @@ export default class RateCard extends React.Component {
             as="input"
             onChange={(e) => {
               const u = { ...rates }
-              u.offEnd = e.target.value.parseInt()
+              u.shoulderEnd = parseInt(e.target.value, 10) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
-            value={rates.offEnd}
+            value={rates.shoulderEnd}
           />
-          <InputGroup.Text>
-            Rate
-          </InputGroup.Text>
-          <FormControl
-            as="input"
-            onChange={(e) => {
-              const u = { ...rates }
-              u.offRate = parseFloat(e.target.value) || 0
-              this.setState({
-                rates: u,
-              })
-            }}
-            value={rates.offRate}
-          />
-        </InputGroup>
-        <InputGroup>
-          <InputGroup.Text>
-            Shoulder
-          </InputGroup.Text>
           <InputGroup.Text>
             Rate
           </InputGroup.Text>
@@ -152,13 +156,51 @@ export default class RateCard extends React.Component {
               u.shoulderRate = parseFloat(e.target.value) || 0
               this.setState({
                 rates: u,
+                changed: true,
               })
             }}
             value={rates.shoulderRate}
           />
         </InputGroup>
+        <InputGroup>
+          <InputGroup.Text>
+            Off-Peak
+          </InputGroup.Text>
+          <InputGroup.Text>
+            Rate
+          </InputGroup.Text>
+          <FormControl
+            as="input"
+            onChange={(e) => {
+              const u = { ...rates }
+              u.offRate = parseFloat(e.target.value) || 0
+              this.setState({
+                rates: u,
+                changed: true,
+              })
+            }}
+            value={rates.offRate}
+          />
+        </InputGroup>
         <div style={{ marginTop: '1em' }} />
-        <ContinueButton title="Enter powerwall details" />
+        <Row>
+          { changed ? (
+            <Col xs="auto">
+              <Button
+                variant="info"
+                onClick={() => {
+                  localStorage.setItem('rates', JSON.stringify(rates))
+                  this.setState({ changed: false })
+                }}
+              >
+                Locally save rates
+              </Button>
+            </Col>
+          ) : null }
+          <Col xs="auto">
+            <ContinueButton title="Enter powerwall details" />
+          </Col>
+        </Row>
       </div>
     )
 

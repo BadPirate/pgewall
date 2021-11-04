@@ -106,7 +106,7 @@ export default class SimulationCard extends React.Component {
 
   render() {
     const {
-      capacity, losses, tilt, address, type, error, estimatedProduction, simulated,
+      capacity, losses, tilt, address, type, error: stateError, estimatedProduction, simulated,
       currentSize, newSize,
     } = this.state
     const { usage, production } = this.props
@@ -117,6 +117,7 @@ export default class SimulationCard extends React.Component {
     let progress = null
     let next = null
     let body = null
+    let error = stateError
 
     const completeCount = complete ? complete.size : 0
     const partialCount = partial ? partial.size : 0
@@ -160,95 +161,99 @@ export default class SimulationCard extends React.Component {
         average: estimatedAverage,
         earliest: estimatedEarliest, latest: estimatedLatest,
       } = prodCalculation(usage, production)
-      progress = `Estimated production, ${Math.round(estimatedAverage)} kw / day, ${estimatedEarliest.format('YYYY-MM-DD')} - ${estimatedLatest.format('YYYY-MM-DD')}`
-      body = (
-        <div>
+      if (!estimatedLatest || !estimatedEarliest) {
+        error = Error('Unable to estimate, no valid range')
+      } else {
+        progress = `Estimated production, ${Math.round(estimatedAverage)} kw / day, ${estimatedEarliest.format('YYYY-MM-DD')} - ${estimatedLatest.format('YYYY-MM-DD')}`
+        body = (
           <div>
-            <Card.Text>
-              Existing solar production has been calculated, you can either use this,
-              or simulate adding more capacity to existing system.
-            </Card.Text>
-            <InputGroup>
-              <InputGroup.Text>Current System Size</InputGroup.Text>
-              <FormControl
-                placeholder="Current System Size"
-                onChange={(e) => {
-                  this.setState({
-                    currentSize: parseFloat(e.target.value) || 0,
-                  })
-                }}
-                value={currentSize}
-                required
-              />
-            </InputGroup>
-            <InputGroup>
-              <InputGroup.Text>New System Size</InputGroup.Text>
-              <FormControl
-                placeholder="New System Size"
-                onChange={(e) => {
-                  this.setState({
-                    newSize: parseFloat(e.target.value) || 0,
-                  })
-                }}
-                value={newSize}
-                required
-              />
-            </InputGroup>
+            <div>
+              <Card.Text>
+                Existing solar production has been calculated, you can either use this,
+                or simulate adding more capacity to existing system.
+              </Card.Text>
+              <InputGroup>
+                <InputGroup.Text>Current System Size</InputGroup.Text>
+                <FormControl
+                  placeholder="Current System Size"
+                  onChange={(e) => {
+                    this.setState({
+                      currentSize: parseFloat(e.target.value) || 0,
+                    })
+                  }}
+                  value={currentSize}
+                  required
+                />
+              </InputGroup>
+              <InputGroup>
+                <InputGroup.Text>New System Size</InputGroup.Text>
+                <FormControl
+                  placeholder="New System Size"
+                  onChange={(e) => {
+                    this.setState({
+                      newSize: parseFloat(e.target.value) || 0,
+                    })
+                  }}
+                  value={newSize}
+                  required
+                />
+              </InputGroup>
+            </div>
+            <div style={{ marginTop: '1em' }} />
+            <Row>
+              <Col xs="auto">
+                <Button
+                  variant="info"
+                  onClick={() => {
+                    if (error) {
+                      this.setState({
+                        error: null,
+                      })
+                    }
+                    if (newSize <= currentSize) {
+                      logError(`${newSize} <= ${currentSize}`)
+                      this.setState({
+                        error: Error('New system must be larger than existing'),
+                      })
+                      return
+                    }
+                    const ratio = newSize / currentSize
+                    const sp = new Map()
+                    estimatedProduction.forEach((v, k) => {
+                      sp.set(k, v * ratio)
+                    })
+                    this.setState({
+                      simulated: sp,
+                    })
+                    localStorage.setItem('simulated', JSON.stringify([...sp]))
+                  }}
+                >
+                  Simulate adding solar
+                </Button>
+              </Col>
+              <Col xs="auto">
+                <ContinueButton title="Use existing solar" />
+              </Col>
+              <Col fluid={1} />
+              <Col xs="auto">
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    this.setState({
+                      estimatedProduction: null,
+                    })
+                    localStorage.removeItem('estimatedProduction')
+                  }}
+                >
+                  Clear Estimate
+                </Button>
+              </Col>
+            </Row>
           </div>
-          <div style={{ marginTop: '1em' }} />
-          <Row>
-            <Col xs="auto">
-              <Button
-                variant="info"
-                onClick={() => {
-                  if (error) {
-                    this.setState({
-                      error: null,
-                    })
-                  }
-                  if (newSize <= currentSize) {
-                    logError(`${newSize} <= ${currentSize}`)
-                    this.setState({
-                      error: Error('New system must be larger than existing'),
-                    })
-                    return
-                  }
-                  const ratio = newSize / currentSize
-                  const sp = new Map()
-                  estimatedProduction.forEach((v, k) => {
-                    sp.set(k, v * ratio)
-                  })
-                  this.setState({
-                    simulated: sp,
-                  })
-                  localStorage.setItem('simulated', JSON.stringify([...sp]))
-                }}
-              >
-                Simulate adding solar
-              </Button>
-            </Col>
-            <Col xs="auto">
-              <ContinueButton title="Use existing solar" />
-            </Col>
-            <Col fluid={1} />
-            <Col xs="auto">
-              <Button
-                variant="danger"
-                onClick={() => {
-                  this.setState({
-                    estimatedProduction: null,
-                  })
-                  localStorage.removeItem('estimatedProduction')
-                }}
-              >
-                Clear Estimate
-              </Button>
-            </Col>
-          </Row>
-        </div>
-      )
+        )
 
-      next = <RateCard production={estimatedProduction} usage={usage} key="rate" start={earliest} />
+        next = <RateCard production={estimatedProduction} usage={usage} key="rate" start={earliest} />
+      }
     } else if (completeCount < 365) {
       progress = 'Estimate incomplete solar production'
       body = (
