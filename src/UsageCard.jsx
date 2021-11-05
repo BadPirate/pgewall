@@ -54,11 +54,11 @@ export default class UsageCard extends React.Component {
 
     const dateColumn = new CSVColumn('date', ['DATE'])
     const timeColumn = new CSVColumn('time', ['START TIME'])
-    const dateTimeColumn = new CSVColumn('datetime', ['DATETIME'], [dateColumn])
+    const dateTimeColumn = new CSVColumn('datetime', ['DATETIME', 'Date/Time'], [dateColumn])
     dateColumn.alternates = [dateTimeColumn]
     timeColumn.alternates = [dateTimeColumn]
     const kwhColumn = new CSVColumn('kwh', ['USAGE', 'kW'])
-    const whColumn = new CSVColumn('wh', ['W'], [kwhColumn])
+    const whColumn = new CSVColumn('wh', ['W', 'Imported from Grid (Wh)'], [kwhColumn])
     kwhColumn.alternates = [whColumn]
 
     const columns = [
@@ -250,7 +250,7 @@ export default class UsageCard extends React.Component {
           </div>
         )
       } else if (completeCount < 365 || contiguous < 365) { // Under
-        progress = `${mcStart.format('YYYY-MM-DD')} - ${mcEnd.format('YYYY-MM-DD')} - Average daily grid use: ${Math.round(totalUse / useBase)} kWH Missing ${365 - contiguous} days`
+        progress = `${mcStart.format('YYYY-MM-DD')} - ${mcEnd.format('YYYY-MM-DD')} - Average daily grid use: ${Math.round(totalUse / (useBase / 24))} kWH Missing ${365 - contiguous} days`
         validUsage = partial.length === 0 && completeCount === 365 && contiguous === 365
         if (partial.length > 0 && completeCount > 0) {
           button = (
@@ -322,7 +322,7 @@ export default class UsageCard extends React.Component {
         button = <ContinueButton title="Add solar production" />
         showImport = false
         validUsage = true
-        progress = `365 days.  Average daily grid use: ${Math.round(totalUse / useBase)} kW`
+        progress = `365 days.  Average daily grid use: ${Math.round(totalUse / (useBase / 24))} kW`
       }
     }
 
@@ -414,6 +414,22 @@ export default class UsageCard extends React.Component {
                   </ReactFileReader>
                 </Col>
               </Row>
+            </Tab>
+            <Tab title="Enphase" eventKey="enphase" key="enphase">
+              <p>
+                Depending on your setup, enphase can export a usage for every 15 minutes,
+                the important column in this place is the raw grid usage without factoring in
+                production (grid usage vs home usage).
+              </p>
+              <ul>
+                <li><a href="https://enlighten.enphaseenergy.com/pv/systems" target="new">Login to enphase</a></li>
+                <li>Go to reports</li>
+                <li>Select monthly net energy and run report for each of the last 12 months</li>
+                <li>Upload</li>
+              </ul>
+              <ReactFileReader handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
+                <Button className="btn" variation="primary">Upload</Button>
+              </ReactFileReader>
             </Tab>
           </Tabs>
           {body}

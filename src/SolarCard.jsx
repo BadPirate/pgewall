@@ -85,7 +85,7 @@ export default class SolarCard extends React.Component {
     const added = new Map()
 
     const kwc = new CSVColumn('kw', ['Solar Energy (kWh)', 'Solar (kW)'])
-    const wc = new CSVColumn('w', ['Energy Produced (Wh)'], [kwc])
+    const wc = new CSVColumn('w', ['Energy Produced (Wh)', 'W', 'Energy Delivered (Wh)'], [kwc])
     kwc.alternates = [wc]
     const columns = [
       new CSVColumn('datetime', ['Date time', 'Date/Time']),
@@ -330,15 +330,10 @@ export default class SolarCard extends React.Component {
           <ModeToggleButton buttonValue="none" buttonTitle="Do not have / want solar" />
         </ToggleButtonGroup>
         {solarBody}
-        {error ? (
-          <Alert variant="danger">
-            {error}
-          </Alert>
-        ) : null}
       </div>
     )
     return (
-      <PWCard title="Solar Production" key="solar" body={body} progress={status} next={next} />
+      <PWCard title="Solar Production" key="solar" body={body} progress={status} next={next} error={error} />
     )
   }
 }
