@@ -1,6 +1,6 @@
 import { logError, logInfo } from './Logging.mjs'
 
-const serverBase = (process.env.NODE_ENV === 'development') ? `${window.location.protocol}//${window.location.hostname}:5000` : ''
+const serverBase = (process.env.NODE_ENV === 'development') ? `${window.location.protocol}//${window.location.hostname}:3001` : ''
 
 export default function API(cmd) {
   const call = `${serverBase}/api/${cmd}`

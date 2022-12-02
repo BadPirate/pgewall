@@ -44,11 +44,11 @@ export default class RateCard extends React.Component {
       rates = {
         peakStart: 16,
         peakEnd: 21,
-        peakRate: 0.5,
-        offRate: 0.19,
+        peakRate: 0.56,
+        offRate: 0.25,
         shoulderStart: 15,
         shoulderEnd: 24,
-        shoulderRate: 0.39,
+        shoulderRate: 0.45,
       }
     }
 

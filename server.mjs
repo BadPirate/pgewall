@@ -26,7 +26,7 @@ app.get('/api/nrel/pvwatts/hourly/:capacity/:type/:losses/:tilt/:address', (req,
     throw Error('NREL_API_KEY not set')
   }
   logInfo('nrel/pvwatts/hourly request', req.params)
-  const url = new URL('https://developer.nrel.gov/api/pvwatts/v6.json')
+  const url = new URL('https://developer.nrel.gov/api/pvwatts/v8.json')
   const params = {
     api_key: process.env.NREL_API_KEY,
     format: 'json',
@@ -63,7 +63,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(`${dirname(filename)}/build/index.html`))
 })
 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 3001
 
 app.use(errorHandlerMiddleware)
 app.listen(port)

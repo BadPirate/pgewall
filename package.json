@@ -29,9 +29,9 @@
   },
   "scripts": {
     "start": "node --experimental-specifier-resolution=node server.mjs",
-    "stop": "(kill -9 $(lsof -ti :5000) 2> /dev/null); (kill -9 $(lsof -ti :3000) 2> /dev/null); echo 'Stopped'",
-    "local": "npm run build && (node --experimental-specifier-resolution=node server.mjs & open http://localhost:5000)",
-    "restart": "(kill -9 $(lsof -ti :5000) 2> /dev/null); node --experimental-specifier-resolution=node server.mjs &",
+    "stop": "(kill -9 $(lsof -ti :3001) 2> /dev/null); (kill -9 $(lsof -ti :3000) 2> /dev/null); echo 'Stopped'",
+    "local": "npm run build && (node --experimental-specifier-resolution=node server.mjs & open http://localhost:3001)",
+    "restart": "(kill -9 $(lsof -ti :3001) 2> /dev/null); node --experimental-specifier-resolution=node server.mjs &",
     "dev": "node --experimental-specifier-resolution=node server.mjs dev & react-scripts start &",
     "build": "react-scripts build",
     "test": "react-scripts test",

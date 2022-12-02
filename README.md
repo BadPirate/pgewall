@@ -23,9 +23,9 @@ I suppose this could work for any other electric company as well, but would like
 1. Pull this repo
 1. Install npm if you haven't
 1. `npm install` to install dependencies
-1. To just run and use: `npm run-script local`
-1. To develop use: `npm run-script dev`
-1. Finally to stop: `npm stop`
+2. To just run and use: `npm run local`
+3. To develop use: `npm run dev`
+4. Finally to stop: `npm stop`
 
 ## Disclaimer
 
