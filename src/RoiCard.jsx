@@ -2,16 +2,27 @@
 /* eslint-disable react/no-unused-prop-types */
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Card, Table } from 'react-bootstrap'
+import {
+  Card, FormControl, InputGroup, Table,
+} from 'react-bootstrap'
 import moment from 'moment'
 import PWCard from './PWCard'
 import { pad } from './utils'
 
 export default class RoiCard extends React.Component {
+  constructor(props) {
+    super(props)
+    const { batteries } = this.props
+    this.state = {
+      totalCost: batteries.count * 12000,
+    }
+  }
+
   render() {
     const {
       batteries, usage, production, simulated, rates, start, arbitrageAllowed,
     } = this.props
+    const { totalCost } = this.state
     const { storagePer, count, efficiency } = batteries
 
     const nowUseTotal = { p: 0, s: 0, o: 0 }
@@ -98,6 +109,8 @@ export default class RoiCard extends React.Component {
     const cost = (group) => group.p * rates.peakRate + group.o * rates.offRate
     + group.s * rates.shoulderRate
 
+    const annualSavings = cost(nowUseTotal) - cost(afterUseTotal)
+
     const body = (
       <div>
         <Card.Text>
@@ -124,6 +137,27 @@ export default class RoiCard extends React.Component {
           </tbody>
         </Table>
         <p>{`Lowest battery charge ${Math.round(lowestCharge)} kW`}</p>
+        <InputGroup>
+          <InputGroup.Text>Total Cost</InputGroup.Text>
+          <FormControl
+            as="input"
+            value={totalCost}
+            onChange={(e) => {
+              this.setState({ totalCost: e.target.value })
+            }}
+          />
+        </InputGroup>
+        <p>
+          {
+            (annualSavings < 0) ? (
+              <Card.Text>{`Negative ROI (${annualSavings})`}</Card.Text>
+            ) : (
+              <Card.Header>
+                {`ROI ${Math.round((totalCost / annualSavings) * 100) / 100} years`}
+              </Card.Header>
+            )
+          }
+        </p>
       </div>
     )
     return (
