@@ -17,11 +17,12 @@ export default class PowerwallCard extends React.Component {
     }
     this.state = {
       batteries,
+      arbitrageAllowed: true,
     }
   }
 
   render() {
-    const { batteries } = this.state
+    const { batteries, arbitrageAllowed } = this.state
     const { count, storagePer, efficiency } = batteries
     const {
       usage, production, simulated, rates, start,
@@ -77,6 +78,7 @@ export default class PowerwallCard extends React.Component {
                         u.efficiency = e.target.value
                         this.setState({
                           batteries: u,
+                          arbitrageAllowed,
                         })
                       }}
                       value={efficiency}
@@ -84,9 +86,33 @@ export default class PowerwallCard extends React.Component {
                   ] : null
               }
         </InputGroup>
+        <Card.Text>
+          Tesla now allows you to Arbitrage power to the grid in some states, and depending on how your filed
+          taxes, you may be able to take advantage of this. This means that during off peak hours the powerwall can
+          re-charge itself from the grid at a lower rate, and then discharge during peak hours at a higher rate.
+          improving the ROI for the powerwall.
+        </Card.Text>
+        <InputGroup>
+          <InputGroup.Text>
+            Allow Arbitrage
+          </InputGroup.Text>
+          <FormControl
+            as="input"
+            type="checkbox"
+            checked={arbitrageAllowed}
+            onChange={(e) => {
+              this.setState({
+                arbitrageAllowed: e.target.checked,
+                batteries,
+              })
+            }}
+          />
+        </InputGroup>
       </div>
     )
-    const progress = `${count} ${count !== 1 ? 'batteries' : 'battery'}${count > 0 ? `, usable storage: ${count * storagePer} kWh` : ''}`
+    const progress = `${count} ${count !== 1
+      ? 'batteries' : 'battery'}${count > 0 ? `, usable storage: ${count * storagePer} kWh`
+      : ''}`
     const next = (
       <RoiCard
         usage={usage}
@@ -96,6 +122,7 @@ export default class PowerwallCard extends React.Component {
         batteries={batteries}
         key="roi"
         start={start}
+        arbitrageAllowed={arbitrageAllowed}
       />
     )
     return (

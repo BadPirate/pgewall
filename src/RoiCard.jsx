@@ -10,7 +10,7 @@ import { pad } from './utils'
 export default class RoiCard extends React.Component {
   render() {
     const {
-      batteries, usage, production, simulated, rates, start,
+      batteries, usage, production, simulated, rates, start, arbitrageAllowed,
     } = this.props
     const { storagePer, count, efficiency } = batteries
 
@@ -20,6 +20,8 @@ export default class RoiCard extends React.Component {
 
     const m = moment(start)
     const bm = count * storagePer * efficiency
+    const maxChargeRate = count * 4
+
     let b = bm
     lowestCharge = bm
     for (let d = 0; d < 365; d += 1) {
@@ -46,19 +48,30 @@ export default class RoiCard extends React.Component {
           case 'p':
             // Discharge battery
             if (b > 0 && gridUse > 0) {
-              const discharge = Math.min(gridUse / efficiency, b)
+              const discharge = Math.min(gridUse / efficiency, b, maxChargeRate)
               b -= discharge
               gridUse -= discharge * efficiency
             }
             break
           default:
             {
-            // Charge Battery
+              let charged = 0
+
+              // Charge Battery
               const availableSolar = p + s
               if (availableSolar > 0 && b < bm) {
                 const charge = Math.min(bm - b, availableSolar)
                 b += charge
                 gridUse += charge // Taking it from the grid... sooo.
+                charged += charge
+              }
+              if (arbitrageAllowed && period === 'o') {
+                // Arbitrage
+                if (b < bm) {
+                  const charge = Math.min(bm - b, maxChargeRate - charged)
+                  b += charge
+                  gridUse += charge
+                }
               }
             }
             break
@@ -126,6 +139,10 @@ RoiCard.propTypes = {
   production: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
   usage: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
   start: PropTypes.instanceOf(moment).isRequired,
+  title: PropTypes.string.isRequired,
+  before: PropTypes.number.isRequired,
+  after: PropTypes.number.isRequired,
+  arbitrageAllowed: PropTypes.bool.isRequired,
 }
 
 RoiCard.defaultProps = {
