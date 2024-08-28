@@ -3,3 +3,4 @@ node_modules
 *.pid
 build
 .DS_Store
+.DS_Store

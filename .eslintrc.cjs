@@ -4,7 +4,6 @@ module.exports = {
     es2021: true,
   },
   extends: [
-    'plugin:react/recommended',
     'airbnb',
   ],
   parserOptions: {
@@ -14,9 +13,6 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: 'module',
   },
-  plugins: [
-    'react',
-  ],
   rules: {
     semi: ['error', 'never'],
     'import/extensions': [0, { '<js>': 'always' }],
@@ -28,5 +24,6 @@ module.exports = {
       ignoreTemplateLiterals: true,
       ignoreComments: true,
     }],
+    'jsx-a11y/control-has-associated-label': 'off',
   },
 }
