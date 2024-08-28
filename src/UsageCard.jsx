@@ -57,7 +57,7 @@ export default class UsageCard extends React.Component {
     const dateTimeColumn = new CSVColumn('datetime', ['DATETIME', 'Date/Time'], [dateColumn])
     dateColumn.alternates = [dateTimeColumn]
     timeColumn.alternates = [dateTimeColumn]
-    const kwhColumn = new CSVColumn('kwh', ['USAGE', 'kW'])
+    const kwhColumn = new CSVColumn('kwh', ['USAGE', 'kW', 'USAGE (kWh)'])
     const whColumn = new CSVColumn('wh', ['W', 'Imported from Grid (Wh)'], [kwhColumn])
     kwhColumn.alternates = [whColumn]
 
@@ -409,7 +409,7 @@ export default class UsageCard extends React.Component {
                   </Button>
                 </Col>
                 <Col xs="auto">
-                  <ReactFileReader handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
+                  <ReactFileReader multipleFiles handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
                     <Button className="btn" variation="primary">Upload</Button>
                   </ReactFileReader>
                 </Col>
@@ -427,7 +427,7 @@ export default class UsageCard extends React.Component {
                 <li>Select monthly net energy and run report for each of the last 12 months</li>
                 <li>Upload</li>
               </ul>
-              <ReactFileReader handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
+              <ReactFileReader multipleFiles handleFiles={(f) => this.handleFiles(f)} fileTypes=".csv">
                 <Button className="btn" variation="primary">Upload</Button>
               </ReactFileReader>
             </Tab>

@@ -135,6 +135,7 @@ export default class SolarCard extends React.Component {
     let complete = null
     let next = null
     let truncatedProduction = null
+    let outOfScopeDays = null
 
     let variant = 'warning'
     if (!production) {
@@ -143,14 +144,14 @@ export default class SolarCard extends React.Component {
       let average
       let valid
       ({
-        average, valid, earliest, latest, complete, partial, truncatedProduction,
+        average, valid, earliest, latest, complete, partial, truncatedProduction, outOfScopeDays,
       } = prodCalculation(usage, production))
       const averageDaily = Math.round(average)
       if (valid) {
         status = `${complete.size} days, average daily production: ${averageDaily} kW`
         variant = 'success'
       } else if ((!partial || partial.size === 0) && (!complete || complete.size === 0)) {
-        status = 'No data loaded'
+        status = `No data loaded (${outOfScopeDays} days out of scope)`
       } else {
         status = `${complete.size}d complete / ${partial.size}d partial, average daily production ${averageDaily}kW, between ${earliest.format('YYYY-MM-DD')} and ${latest.format('YYYY-MM-DD')}`
       }
@@ -187,7 +188,7 @@ export default class SolarCard extends React.Component {
               </li>
               <li>Upload below</li>
             </ul>
-            <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
+            <ReactFileReader multipleFiles handleFiles={(f) => this.upload(f)} fileTypes=".csv">
               <Button className="btn" variation="primary">Upload Production CSV</Button>
             </ReactFileReader>
           </Tab>
@@ -210,7 +211,7 @@ export default class SolarCard extends React.Component {
                 <Button variant="info" href="/sample_production.csv">Download Template</Button>
               </Col>
               <Col xs="auto">
-                <ReactFileReader handleFiles={(f) => this.upload(f)} fileTypes=".csv">
+                <ReactFileReader multipleFiles handleFiles={(f) => this.upload(f)} fileTypes=".csv">
                   <Button className="btn" variation="primary">Upload Production CSV</Button>
                 </ReactFileReader>
               </Col>
@@ -295,17 +296,19 @@ export default class SolarCard extends React.Component {
       haveSolar: value,
     })
     function ModeToggleButton(props) {
+      // eslint-disable-next-line react/prop-types
+      const { buttonValue, buttonTitle } = props
       return (
         <Button
-          key={props.buttonValue}
-          variant={haveSolar === props.buttonValue ? 'primary' : 'secondary'}
-          value={props.buttonValue}
+          key={buttonValue}
+          variant={haveSolar === buttonValue ? 'primary' : 'secondary'}
+          value={buttonValue}
           onClick={() => {
-            localStorage.setItem('haveSolar', props.buttonValue)
-            updateHave(props.buttonValue)
+            localStorage.setItem('haveSolar', buttonValue)
+            updateHave(buttonValue)
           }}
         >
-          {props.buttonTitle}
+          {buttonTitle}
         </Button>
       )
     }
