@@ -19,5 +19,14 @@ module.exports = {
   ],
   rules: {
     semi: ['error', 'never'],
+    'import/extensions': [0, { '<js>': 'always' }],
+    'max-len': ['error', {
+      code: 120,
+      tabWidth: 2,
+      ignoreUrls: true,
+      ignoreStrings: true,
+      ignoreTemplateLiterals: true,
+      ignoreComments: true,
+    }],
   },
 }

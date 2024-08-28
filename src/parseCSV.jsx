@@ -61,7 +61,7 @@ export function parseCSV(file, columnsIn, onRow) {
       if (!columnsFound) {
         columns.forEach((v) => {
           if (!v.satisfied()) {
-            reject(Error(`Unable to find '${v.name}' column.  Looking for one of: [${Array.from(v.set).join(', ')}]`))
+            reject(Error(`Unable to find '${v.name}' column.  Looking for one of: [${Array.from(v.set).join(', ')}], found: ${Array.from(v.set).join(', ')}`))
           }
         })
       }

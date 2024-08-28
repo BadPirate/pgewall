@@ -5,7 +5,7 @@ import {
 } from 'react-bootstrap'
 import moment from 'moment'
 import PWCard, { ContinueButton } from './PWCard'
-import PVWattsAPI from './PVWattsAPI'
+import PVWattsAPI from './PVWattsAPI.js'
 import prodCalculation from './prodCalculation'
 import { logInfo, logError } from './Logging.mjs'
 import { earliestMoment, pad } from './utils'

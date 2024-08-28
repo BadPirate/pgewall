@@ -1,4 +1,4 @@
-import API from './Api'
+import API from './Api.js'
 
 export default class PVWattsAPI {
   /**

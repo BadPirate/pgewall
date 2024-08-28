@@ -1,3 +1,5 @@
+import { logError } from './Logging.mjs'
+
 const moment = require('moment')
 
 export default function prodCalculation(usage, production) {
@@ -10,6 +12,7 @@ export default function prodCalculation(usage, production) {
   const truncatedProduction = new Map()
   let average = 0
   let averageCount = 0
+  let outOfScopeDays = 0
   const usageDays = new Set()
   usage.forEach((v, k) => {
     const m = moment(k)
@@ -19,10 +22,20 @@ export default function prodCalculation(usage, production) {
   const prodDays = new Map()
   production.forEach((v, k) => {
     const m = moment(k)
-    if (!m.isValid()) return
+    if (!m.isValid()) {
+      logError('Invalid date', k)
+      return
+    }
     const dk = m.format('YYYY-MM-DD')
-    if (!usageDays.has(dk)) { return }
-    if (Number.isNaN(v) || v === 0) { return }
+    if (!usageDays.has(dk)) {
+      logError('No usage for production', dk)
+      outOfScopeDays += 1
+      return
+    }
+    if (Number.isNaN(v) || v === 0) {
+      logError('Invalid production value', k, v)
+      return
+    }
     average += v
     averageCount += 1
     truncatedProduction.set(k, v)
@@ -47,6 +60,14 @@ export default function prodCalculation(usage, production) {
   const valid = complete && complete.size === 365
   average /= averageCount
   return {
-    average, prodDays, valid, earliest, latest, complete, partial, truncatedProduction,
+    average,
+    prodDays,
+    valid,
+    earliest,
+    latest,
+    complete,
+    partial,
+    truncatedProduction,
+    outOfScopeDays,
   }
 }
