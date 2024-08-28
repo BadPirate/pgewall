@@ -45,7 +45,7 @@ export default class RateCard extends React.Component {
         peakStart: 16,
         peakEnd: 21,
         peakRate: 0.56,
-        offRate: 0.25,
+        offRate: 0.24,
         shoulderStart: 15,
         shoulderEnd: 24,
         shoulderRate: 0.45,
@@ -56,7 +56,7 @@ export default class RateCard extends React.Component {
       <div>
         <Card.Text>
           The rate plan you are on with your electric company can cause your savings to vary
-          quite a bit.  Pre-filled in is the 2021 EV-A plan with PG&amp;E, a net energy metering
+          quite a bit.  Pre-filled in is the 2024 EV2A plan with PG&amp;E, a net energy metering
           plan that has a good time of use distribution for powerwall savings, feel free to try
           other plan rates in here to better understand savings.  Note times are all
           in military (00 - 23), and minutes are assumed to be :00.  If your provider does not
