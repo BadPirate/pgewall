@@ -4,12 +4,12 @@ import {
   Dropdown, DropdownButton, FormControl, InputGroup, Button, Alert, Row, Col, Card,
 } from 'react-bootstrap'
 import moment from 'moment'
-import PWCard, { ContinueButton } from './PWCard'
+import PWCard, { ContinueButton } from './PWCard.jsx'
 import PVWattsAPI from './PVWattsAPI.js'
-import prodCalculation from './prodCalculation'
+import prodCalculation from './prodCalculation.jsx'
 import { logInfo, logError } from './Logging.mjs'
-import { earliestMoment, pad } from './utils'
-import RateCard from './RateCard'
+import { earliestMoment, pad } from './utils.js'
+import RateCard from './RateCard.jsx'
 
 function dayTotal(v) {
   let total = 0

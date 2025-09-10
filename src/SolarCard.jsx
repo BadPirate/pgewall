@@ -4,13 +4,13 @@ import PropTypes from 'prop-types'
 import {
   Card, Button, ToggleButtonGroup, Tabs, Tab, Alert, Row, Col,
 } from 'react-bootstrap'
-import { earliestMoment, logEvent } from './utils'
+import { earliestMoment, logEvent } from './utils.js'
 import { logError, logInfo } from './Logging.mjs'
-import PWCard, { ContinueButton } from './PWCard'
-import SimulationCard from './SimulationCard'
-import { CSVColumn, parseCSVs } from './parseCSV'
-import prodCalculation from './prodCalculation'
-import RateCard from './RateCard'
+import PWCard, { ContinueButton } from './PWCard.jsx'
+import SimulationCard from './SimulationCard.jsx'
+import { CSVColumn, parseCSVs } from './parseCSV.jsx'
+import prodCalculation from './prodCalculation.jsx'
+import RateCard from './RateCard.jsx'
 
 const moment = require('moment')
 

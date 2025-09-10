@@ -4,8 +4,8 @@ import {
   Card, InputGroup, FormControl,
 } from 'react-bootstrap'
 import moment from 'moment'
-import PWCard from './PWCard'
-import RoiCard from './RoiCard'
+import PWCard from './PWCard.jsx'
+import RoiCard from './RoiCard.jsx'
 
 export default class PowerwallCard extends React.Component {
   constructor(props) {

@@ -4,8 +4,8 @@ import {
   Card, InputGroup, FormControl, Row, Col, Button,
 } from 'react-bootstrap'
 import moment from 'moment'
-import PowerwallCard from './PowerwallCard'
-import PWCard, { ContinueButton } from './PWCard'
+import PowerwallCard from './PowerwallCard.jsx'
+import PWCard, { ContinueButton } from './PWCard.jsx'
 import { logError } from './Logging.mjs'
 
 export default class RateCard extends React.Component {

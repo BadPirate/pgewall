@@ -6,8 +6,8 @@ import {
   Card, FormControl, InputGroup, Table,
 } from 'react-bootstrap'
 import moment from 'moment'
-import PWCard from './PWCard'
-import { pad } from './utils'
+import PWCard from './PWCard.jsx'
+import { pad } from './utils.js'
 
 export default class RoiCard extends React.Component {
   constructor(props) {

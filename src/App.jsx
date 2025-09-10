@@ -3,9 +3,9 @@ import './App.css'
 import {
   Tabs, Tab,
 } from 'react-bootstrap'
-import { installTrackingIfEnabled, logEvent } from './utils'
-import PWCard from './PWCard'
-import UsageCard from './UsageCard'
+import { installTrackingIfEnabled, logEvent } from './utils.js'
+import PWCard from './PWCard.jsx'
+import UsageCard from './UsageCard.jsx'
 
 class App extends React.Component {
   componentDidMount() {

@@ -5,11 +5,11 @@ import {
 } from 'react-bootstrap'
 import ReactFileReader from 'react-file-reader'
 import moment from 'moment'
-import { logEvent, pad } from './utils'
+import { logEvent, pad } from './utils.js'
 import { logError, logInfo } from './Logging.mjs'
-import PWCard, { ContinueButton } from './PWCard'
-import SolarCard from './SolarCard'
-import { parseCSVs, CSVColumn } from './parseCSV'
+import PWCard, { ContinueButton } from './PWCard.jsx'
+import SolarCard from './SolarCard.jsx'
+import { parseCSVs, CSVColumn } from './parseCSV.jsx'
 
 const clearState = {
   progress: 'No Data Loaded',
